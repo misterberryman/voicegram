@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Voice-Tastic Singer's Spectrogram</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #6d4aff, #4a3ab8);
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .pitch-display {
+            background: rgba(109, 76, 255, 0.3);
+            padding: 12px 16px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .fundamental-pitch {
+            font-size: 48px;
+            font-weight: bold;
+            color: #fff;
+            line-height: 1;
+        }
+
+        .fundamental-details {
+            font-size: 18px;
+            color: #ccc;
+            margin-top: 4px;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 12px;
+            justify-content: center;
+            background: #252542;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            min-width: 120px;
+        }
+
+        button.primary {
+            background: linear-gradient(135deg, #6d4aff, #4a3ab8);
+            color: white;
+        }
+
+        button.danger {
+            background: linear-gradient(135deg, #ff4757, #c0392b);
+            color: white;
+        }
+
+        button.secondary {
+            background: #3a3a5a;
+            color: #ddd;
+        }
+
+        button.success {
+            background: linear-gradient(135deg, #27ae60, #1e8449);
+            color: white;
+        }
+
+        button:active {
+            transform: scale(0.97);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-bar {
+            padding: 8px 16px;
+            background: #2a2a4a;
+            font-size: 14px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            padding: 4px 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+            margin: 2px;
+        }
+
+        .crosshair-info {
+            padding: 10px 16px;
+            background: rgba(109, 76, 255, 0.4);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .crosshair-section {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .crosshair-label {
+            color: #aaa;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .crosshair-value {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            height: 50vh;
+            min-height: 300px;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #spectrogram {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        #crosshair {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .harmonics-panel {
+            display: none;
+            padding: 12px;
+            background: #20203a;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .harmonics-panel.visible {
+            display: block;
+        }
+
+        #harmonicBars {
+            width: 100%;
+            height: 180px;
+            background: #0e0e1a;
+            border-radius: 6px;
+            display: block;
+        }
+
+        .harmonics-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 13px;
+        }
+
+        .harmonics-table th, .harmonics-table td {
+            padding: 4px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .harmonics-table th {
+            color: #aaa;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .h-dominant {
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .tools-panel {
+            padding: 12px;
+            background: #2a2a4a;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .tools-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .tools-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .voice-range-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .voice-range-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            min-width: auto;
+        }
+
+        .voice-range-btn.active {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            box-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
+        }
+
+        .target-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .target-selector select {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #6d4aff;
+            border-radius: 4px;
+            background: #1a1a2e;
+            color: white;
+            min-width: 100px;
+        }
+
+        .target-selector label {
+            color: #aaa;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .export-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .recordings {
+            padding: 16px;
+            background: #252542;
+        }
+
+        .recordings h3 {
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #ccc;
+        }
+
+        .recording-list {
+            display: grid;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .recording-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(109, 76, 255, 0.2);
+            border-radius: 6px;
+        }
+
+        .recording-item audio {
+            flex: 1;
+            height: 40px;
+        }
+
+        .delete-btn {
+            padding: 6px 12px;
+            background: #c0392b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .instructions {
+            padding: 16px;
+            background: rgba(109, 76, 255, 0.1);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .instructions h3 {
+            margin-bottom: 8px;
+            color: #ccc;
+        }
+
+        @media (max-width: 600px) {
+            .fundamental-pitch {
+                font-size: 36px;
+            }
+            .controls {
+                gap: 6px;
+            }
+            button {
+                padding: 10px 16px;
+                font-size: 14px;
+                min-width: auto;
+            }
+            .canvas-container {
+                height: 45vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Voice-Tastic Singer's Spectrogram</h1>
+    </div>
+
+    <div class="pitch-display">
+        <div class="fundamental-pitch" id="fundamentalNote">--</div>
+        <div class="fundamental-details" id="fundamentalDetails">Tap Start to begin</div>
+    </div>
+
+    <div class="controls">
+        <button id="startBtn" class="primary">▶ Start</button>
+        <button id="stopBtn" class="danger" disabled>⏹ Stop</button>
+        <button id="recordBtn" class="secondary" disabled>● Record</button>
+        <button id="clearBtn" class="secondary">Clear</button>
+        <button id="harmonicsToggle" class="secondary">📈 Harmonics: Off</button>
+    </div>
+
+    <div class="status-bar">
+        <span class="status-item">📊 FFT Size: 2048</span>
+        <span class="status-item">🎚️ Sample Rate: <span id="sampleRate">--</span> Hz</span>
+        <span class="status-item">🔋 FPS: <span id="fpsCounter">--</span></span>
+    </div>
+
+    <div class="crosshair-info">
+        <div class="crosshair-section">
+            <span class="crosshair-label">Freq:</span>
+            <span class="crosshair-value" id="cursorFreq">-- Hz</span>
+        </div>
+        <div class="crosshair-section">
+            <span class="crosshair-label">Note:</span>
+            <span class="crosshair-value" id="cursorNote">--</span>
+        </div>
+        <div class="crosshair-section">
+            <span class="crosshair-label">Level:</span>
+            <span class="crosshair-value" id="cursorDb">-- dB</span>
+        </div>
+        <div class="crosshair-section">
+            <span class="crosshair-label">Status:</span>
+            <span class="crosshair-value" id="hoverStatus">Hover for info</span>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <canvas id="spectrogram"></canvas>
+        <svg id="crosshair">
+            <line x1="0" y1="0" x2="0" y2="0" stroke="#6d4aff" stroke-width="2"/>
+        </svg>
+    </div>
+
+    <div class="harmonics-panel" id="harmonicsPanel">
+        <canvas id="harmonicBars"></canvas>
+        <div id="harmonicTable"></div>
+    </div>
+
+    <div class="tools-panel">
+        <div class="tools-row">
+            <span style="color: #aaa; font-size: 12px; text-transform: uppercase;">Voice Ranges (overlay):</span>
+            <div class="voice-range-buttons">
+                <button class="voice-range-btn secondary" data-voice="soprano">Soprano</button>
+                <button class="voice-range-btn secondary" data-voice="alto">Alto</button>
+                <button class="voice-range-btn secondary" data-voice="tenor">Tenor</button>
+                <button class="voice-range-btn secondary" data-voice="baritone">Baritone</button>
+                <button class="voice-range-btn secondary" data-voice="bass">Bass</button>
+            </div>
+        </div>
+
+        <div class="tools-row">
+            <div class="target-selector">
+                <label>Target Pitch Line:</label>
+                <select id="targetNoteSelect">
+                    <option value="">None</option>
+                    <optgroup label="Common Singing Notes">
+                        <option value="261.63">C4 (Middle C)</option>
+                        <option value="277.18">C#4/Db4</option>
+                        <option value="293.66">D4</option>
+                        <option value="311.13">Eb4/D#4</option>
+                        <option value="329.63">E4</option>
+                        <option value="349.23">F4</option>
+                        <option value="369.99">F#4/Gb4</option>
+                        <option value="392.00">G4</option>
+                        <option value="415.30">G#4/Ab4</option>
+                        <option value="440.00">A4 (Concert Pitch)</option>
+                        <option value="466.16">A#4/Bb4</option>
+                        <option value="493.88">B4</option>
+                        <option value="523.25">C5</option>
+                        <option value="554.37">C#5/Db5</option>
+                        <option value="587.33">D5</option>
+                        <option value="622.25">Eb5/D#5</option>
+                        <option value="659.25">E5</option>
+                        <option value="698.46">F5</option>
+                        <option value="739.99">F#5/Gb5</option>
+                        <option value="783.99">G5</option>
+                        <option value="830.61">G#5/Ab5</option>
+                        <option value="880.00">A5</option>
+                    </optgroup>
+                    <optgroup label="Custom Frequency">
+                        <option value="custom">Custom Hz...</option>
+                    </optgroup>
+                </select>
+                <input type="number" id="customFreqInput" placeholder="Enter Hz" min="20" max="18000" 
+                       style="display:none; padding:8px; width:100px; border:1px solid #6d4aff; border-radius:4px; background:#1a1a2e; color:white;">
+                <button id="toggleTargetLine" class="secondary" disabled>Hide Line</button>
+                <button id="removeTargetLine" class="danger" disabled>X Remove</button>
+            </div>
+        </div>
+
+        <div class="tools-row">
+            <div class="export-options">
+                <button id="exportImageBtn" class="success" disabled>📷 Export Image</button>
+                <button id="exportAudioBtn" class="success" disabled>🎵 Download Audio</button>
+                <button id="downloadTargetBtn" class="secondary" disabled>📝 Log Session</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="recordings">
+        <h3>🎙️ Recordings</h3>
+        <div class="recording-list" id="recordingList">
+            <p style="color: #888; text-align: center;">No recordings yet. Tap Record to capture.</p>
+        </div>
+    </div>
+
+    <div class="instructions">
+        <h3>How to use</h3>
+        <p><strong>🎤 Microphone:</strong> Tap Start to enable mic and see real-time spectrogram. Speak or sing to visualize harmonics.</p>
+        <p><strong>👆 Crosshair:</strong> Move your finger/mouse over the spectrogram. Hover shows frequency, note name, and loudness.</p>
+        <p><strong>💥 Click to Hear:</strong> Tap anywhere on the spectrogram to play a 2-second sine wave at that frequency.</p>
+        <p><strong>🎙️ Recording:</strong> Tap Record to capture audio. Replay and compare later.</p>
+        <p><strong>🎼 Voice Ranges:</strong> Select Soprano/Alto/Tenor/Baritone/Bass to see typical ranges overlayed.</p>
+        <p><strong>🎯 Target Pitch:</strong> Choose a note to draw a green target line. Your pitch turns green when within ±3%.</p>
+        <p><strong>📈 Harmonics:</strong> Toggle ON to see strength of up to 16 overtones in a bar chart and table. Helps analyze vocal richness, breathiness, and resonance.</p>
+        <p><strong>💾 Export:</strong> Save spectrogram images, download recordings, or export session logs for lesson notes.</p>
+    </div>
+
+    <script>
+        // ==================== GLOBALS ====================
+        let audioContext = null;
+        let analyser = null;
+        let source = null;
+        let mediaStream = null;
+        let recorder = null;
+        let recordedChunks = [];
+        let audioBlob = null;
+        let animationId = null;
+        let startTime = 0;
+        let frameCount = 0;
+        let lastFpsUpdate = 0;
+        let currentFPS = 0;
+        let peakHold = null;
+        let timeDomainBuf = null;
+        let freqBytesBuf = null;
+        let targetFreq = 0;
+        
+        // ==================== SPECTROGRAM ====================
+        const canvas = document.getElementById('spectrogram');
+        const ctx = canvas.getContext('2d');
+        let spectrogramData = [];
+        const maxColumns = 300;
+        let isRunning = false;
+        
+        // ==================== CONSTANTS ====================
+        const MIN_FREQ = 20;
+        const MAX_FREQ = 18000;
+        const A4_FREQ = 440;
+        const A4_NOTE_NUMBER = 69;
+        const NOTES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        
+        // ==================== VOICE RANGES ====================
+        const VOICE_RANGES = {
+            soprano: { min: 261.63, max: 1046.50, name: "Soprano", color: "#ff69b4" },
+            alto: { min: 164.81, max: 659.25, name: "Alto", color: "#9370db" },
+            tenor: { min: 130.81, max: 523.25, name: "Tenor", color: "#00ced1" },
+            baritone: { min: 98.00, max: 440.00, name: "Baritone", color: "#ffa500" },
+            bass: { min: 55.00, max: 330.00, name: "Bass", color: "#228b22" }
+        };
+
+        // ==================== HARMONICS VARIABLES ====================
+        let harmonicsEnabled = false;
+        let latestMag = null;
+        let smoothHarm = new Float32Array(16).fill(-100);
+        let harmonicFrameCounter = 0;
+        const HARMONICS_TO_SHOW = 16;
+        const HARMONIC_FLOOR_DB = -80;
+        
+        // ==================== COLOR MAP ====================
+        function amplitudeToColor(amplitude, maxAmplitude) {
+            if (maxAmplitude === 0) return { r: 0, g: 0, b: 0 };
+            const normalized = Math.max(0, amplitude / maxAmplitude);
+            let r, g, b;
+            if (normalized < 0.25) {
+                const t = normalized / 0.25;
+                r = Math.floor(255 * t); g = 0; b = 0;
+            } else if (normalized < 0.5) {
+                const t = (normalized - 0.25) / 0.25;
+                r = 255; g = Math.floor(255 * t); b = 0;
+            } else if (normalized < 0.75) {
+                const t = (normalized - 0.5) / 0.25;
+                r = 255; g = 255; b = Math.floor(255 * t);
+            } else {
+                const t = (normalized - 0.75) / 0.25;
+                r = 255; g = 255; b = Math.floor(255 * t);
+            }
+            return { r, g, b };
+        }
+        
+        function dbToAmplitude(db) {
+            const clampedDb = Math.max(-120, Math.min(0, db));
+            return Math.pow(10, clampedDb / 20);
+        }
+        
+        function amplitudeToDb(amplitude) {
+            if (amplitude <= 0) return -Infinity;
+            return 20 * Math.log10(amplitude);
+        }
+        
+        // ==================== PITCH DETECTION ====================
+        function autocorrelate(arr, sampleRate) {
+            const SIZE = arr.length;
+            const RMS = Math.sqrt(arr.reduce((sum, val) => sum + val * val, 0) / SIZE);
+            if (RMS < 0.01) return -1;
+            
+            const halfSize = Math.floor(SIZE / 2);
+            let bestOffset = -1, bestCorrelation = 0;
+            let foundGoodCorrelation = false;
+            const correlations = new Array(halfSize).fill(0);
+            
+            for (let offset = 0; offset < halfSize; offset++) {
+                let correlation = 0;
+                for (let i = 0; i < halfSize; i++) {
+                    correlation += Math.abs(arr[i] - arr[i + offset]);
+                }
+                correlation = 1 - (correlation / SIZE);
+                correlations[offset] = correlation;
+                
+                if ((correlation > 0.9) && (correlation > bestCorrelation)) {
+                    foundGoodCorrelation = true;
+                    bestCorrelation = correlation;
+                    bestOffset = offset;
+                } else if (foundGoodCorrelation) {
+                    const shift = (correlations[bestOffset + 1] - correlations[bestOffset - 1]) /
+                                  (2 * (correlations[bestOffset] - correlations[bestOffset + 1]));
+                    return sampleRate / (bestOffset + shift);
+                }
+            }
+            
+            for (let i = 0; i < halfSize; i++) {
+                if (correlations[i] > bestCorrelation && correlations[i] > 0) {
+                    bestCorrelation = correlations[i];
+                    bestOffset = i;
+                }
+            }
+            
+            return bestOffset > 0 ? sampleRate / bestOffset : -1;
+        }
+        
+        function freqToNote(frequency) {
+            if (frequency <= 0) return { note: '--', octave: '', cents: 0 };
+            const noteNumber = Math.round(A4_NOTE_NUMBER + 12 * Math.log2(frequency / A4_FREQ));
+            const noteName = NOTES[noteNumber % 12];
+            const octave = Math.floor(noteNumber / 12) - 1;
+            const calculatedFreq = A4_FREQ * Math.pow(2, (noteNumber - A4_NOTE_NUMBER) / 12);
+            const cents = Math.round(1200 * Math.log2(frequency / calculatedFreq));
+            return { note: noteName, octave, cents, full: `${noteName}${octave}`, exact: frequency };
+        }
+        
+        // ==================== SPECTROGRAM RENDERING ====================
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            if (isRunning) drawSpectrogram();
+        }
+        
+        function addFrameToSpectrogram(freqData, magnitudes) {
+            spectrogramData.push({ freq: freqData.slice(), magnitude: magnitudes.slice(), timestamp: Date.now() });
+            if (spectrogramData.length > maxColumns) spectrogramData.shift();
+        }
+        
+        function getFrequencyFromBin(binIndex) {
+            return (MAX_FREQ / 1024) * binIndex;
+        }
+        
+        function getYFromFrequency(frequency) {
+            const binIndex = Math.floor(frequency / (MAX_FREQ / 1024));
+            return canvas.height - (binIndex + 1) * (canvas.height / 128);
+        }
+        
+        function drawSpectrogram() {
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+            if (spectrogramData.length === 0) return;
+            
+            const colWidth = width / maxColumns;
+            const barHeight = height / 128;
+            
+            if (!peakHold) peakHold = new Float32Array(128).fill(0);
+            
+            for (let colIndex = 0; colIndex < spectrogramData.length; colIndex++) {
+                const data = spectrogramData[colIndex];
+                const x = colIndex * colWidth;
+                
+                let maxMag = 0;
+                for (let bin = 0; bin < data.magnitude.length; bin++) {
+                    maxMag = Math.max(maxMag, data.magnitude[bin]);
+                    peakHold[Math.min(bin, 127)] = Math.max(peakHold[Math.min(bin, 127)], data.magnitude[bin]) * 0.98;
+                }
+                
+                for (let bin = 0; bin < 128; bin++) {
+                    const y = height - (bin + 1) * barHeight;
+                    const color = amplitudeToColor(data.magnitude[bin], maxMag || 1);
+                    ctx.fillStyle = `rgb(${color.r}, ${color.g}, ${color.b})`;
+                    ctx.fillRect(x, y, colWidth, barHeight + 1);
+                }
+            }
+            
+            // Voice range overlays
+            const activeVoice = document.querySelector('.voice-range-btn.active');
+            if (activeVoice) {
+                const voiceType = activeVoice.dataset.voice;
+                const range = VOICE_RANGES[voiceType];
+                const minY = getYFromFrequency(range.min);
+                const maxY = getYFromFrequency(range.max);
+                
+                ctx.fillStyle = range.color + '33';
+                ctx.fillRect(0, Math.min(minY, maxY), width, Math.abs(maxY - minY));
+                
+                ctx.strokeStyle = range.color;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([10, 5]);
+                ctx.beginPath(); ctx.moveTo(0, minY); ctx.lineTo(width, minY); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, maxY); ctx.lineTo(width, maxY); ctx.stroke();
+                ctx.setLineDash([]);
+                
+                ctx.fillStyle = range.color;
+                ctx.font = 'bold 14px Arial';
+                ctx.fillText(`${range.name} Range: ${freqToNote(range.min).full} - ${freqToNote(range.max).full}`, 10, 25);
+            }
+            
+            // Target line
+            if (targetFreq > 0 && targetFreq <= MAX_FREQ) {
+                const y = getYFromFrequency(targetFreq);
+                ctx.strokeStyle = '#00ff88';
+                ctx.lineWidth = 3;
+                ctx.setLineDash([15, 10]);
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(width, y); ctx.stroke();
+                ctx.setLineDash([]);
+                const note = freqToNote(targetFreq);
+                ctx.fillStyle = '#00ff88';
+                ctx.font = 'bold 16px Arial';
+                ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                ctx.shadowBlur = 4;
+                ctx.fillText(`${note.full} (${targetFreq.toFixed(0)} Hz) target`, width - 200, y - 10);
+                ctx.shadowBlur = 0;
+            }
+            
+            // Peak hold dots
+            for (let bin = 0; bin < 128; bin++) {
+                if (peakHold[bin] > 0.1) {
+                    const y = height - (bin + 1) * barHeight;
+                    const color = amplitudeToColor(peakHold[bin], 1);
+                    ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`;
+                    ctx.fillRect(width - 10, y, 5, barHeight + 1);
+                }
+            }
+        }
+        
+        // ==================== HARMONICS DISPLAY ====================
+        function updateHarmonics(f0) {
+            if (!latestMag || !audioContext) return;
+            
+            const barCanvas = document.getElementById('harmonicBars');
+            const g = barCanvas.getContext('2d');
+            barCanvas.width = barCanvas.clientWidth || 400;
+            barCanvas.height = 180;
+            const w = barCanvas.width, h = barCanvas.height;
+            
+            const binHz = audioContext.sampleRate / analyser.fftSize;
+            for (let n = 1; n <= HARMONICS_TO_SHOW; n++) {
+                const freq = n * f0;
+                if (freq >= 18000) { smoothHarm[n - 1] = HARMONIC_FLOOR_DB; continue; }
+                const bin = Math.min(latestMag.length - 1, Math.round(freq / binHz));
+                const raw = 20 * Math.log10(latestMag[bin] + 1e-9);
+                const db = Math.max(HARMONIC_FLOOR_DB, Math.min(0, raw));
+                smoothHarm[n - 1] = smoothHarm[n - 1] * 0.6 + db * 0.4;
+            }
+            
+            let maxDb = -1000, dominant = 1;
+            for (let n = 1; n <= HARMONICS_TO_SHOW; n++) {
+                if (smoothHarm[n - 1] > maxDb) { maxDb = smoothHarm[n - 1]; dominant = n; }
+            }
+            
+            g.fillStyle = '#0e0e1a';
+            g.fillRect(0, 0, w, h);
+            const slot = w / HARMONICS_TO_SHOW;
+            
+            for (let n = 1; n <= HARMONICS_TO_SHOW; n++) {
+                const db = smoothHarm[n - 1];
+                const norm = Math.max(0, (db - HARMONIC_FLOOR_DB) / -HARMONIC_FLOOR_DB);
+                const barH = norm * (h - 45);
+                const x = (n - 1) * slot + 6;
+                const y = h - 22 - barH;
+                
+                g.fillStyle = (n === dominant) ? '#00ff88' : '#6d4aff';
+                g.fillRect(x, y, slot - 12, barH);
+                
+                g.fillStyle = '#999';
+                g.font = '11px Arial';
+                g.textAlign = 'center';
+                g.fillText(`H${n}`, (n - 0.5) * slot, h - 8);
+                if (db > HARMONIC_FLOOR_DB + 2) {
+                    g.fillStyle = '#ccc';
+                    g.fillText(`${Math.round(db)}`, (n - 0.5) * slot, y - 4);
+                }
+            }
+            
+            g.textAlign = 'left';
+            g.fillStyle = '#aaa';
+            g.font = '12px Arial';
+            const note = freqToNote(f0);
+            g.fillText(`f₀ ${Math.round(f0)} Hz (${note.full}) — dB per harmonic, strongest = H${dominant} (green)`, 10, 16);
+            
+            harmonicFrameCounter++;
+            if (harmonicFrameCounter % 6 === 0) {
+                let rows = '';
+                for (let n = 1; n <= HARMONICS_TO_SHOW; n++) {
+                    const db = smoothHarm[n - 1];
+                    if (db <= HARMONIC_FLOOR_DB + 1) continue;
+                    const freq = n * f0;
+                    const hn = freqToNote(freq);
+                    rows += `<tr${n === dominant ? ' class="h-dominant"' : ''}>` +
+                            `<td>H${n}</td><td>${Math.round(freq)} Hz</td>` +
+                            `<td>${hn.full} ${hn.cents >= 0 ? '+' : ''}${hn.cents}¢</td>` +
+                            `<td>${db.toFixed(1)} dB</td></tr>`;
+                }
+                document.getElementById('harmonicTable').innerHTML =
+                    `<table class="harmonics-table"><tr><th>Harmonic</th><th>Freq</th><th>Note</th><th>Level</th></tr>${rows}</table>`;
+            }
+        }
+        
+        // ==================== MAIN LOOP ====================
+        function processFrame(time) {
+            if (!isRunning) return;
+            
+            if (!timeDomainBuf) {
+                timeDomainBuf = new Uint8Array(analyser.fftSize);
+                freqBytesBuf = new Uint8Array(analyser.frequencyBinCount);
+            }
+            
+            analyser.getByteTimeDomainData(timeDomainBuf);
+            analyser.getByteFrequencyData(freqBytesBuf);
+            
+            const timeFloat = new Float32Array(analyser.fftSize);
+            for (let i = 0; i < analyser.fftSize; i++) {
+                timeFloat[i] = (timeDomainBuf[i] - 128) / 128;
+            }
+            
+            const freqData = new Float32Array(analyser.frequencyBinCount);
+            const magData = new Float32Array(analyser.frequencyBinCount);
+            for (let i = 0; i < analyser.frequencyBinCount; i++) {
+                const db = -100 + (freqBytesBuf[i] / 255) * 70;
+                freqData[i] = freqBytesBuf[i] / 255;
+                magData[i] = Math.pow(10, db / 20);
+            }
+            latestMag = magData;
+            
+            const frequency = autocorrelate(timeFloat, audioContext.sampleRate);
+            if (frequency > 0) {
+                const note = freqToNote(frequency);
+                document.getElementById('fundamentalNote').textContent =
+                    note.note !== '--' ? note.full : '--';
+                
+                let targetHit = '';
+                if (targetFreq > 0 && Math.abs(frequency - targetFreq) / targetFreq < 0.03) {
+                    targetHit = ' ✓ ON TARGET';
+                    document.getElementById('fundamentalNote').style.color = '#00ff88';
+                } else {
+                    document.getElementById('fundamentalNote').style.color = '#fff';
+                }
+                
+                document.getElementById('fundamentalDetails').textContent =
+                    `${frequency.toFixed(1)} Hz | ${note.cents:+d}¢ off${targetHit}`;
+                
+                if (harmonicsEnabled && frequency > 20 && frequency < 4000) {
+                    updateHarmonics(frequency);
+                }
+            } else {
+                document.getElementById('fundamentalNote').textContent = '--';
+                document.getElementById('fundamentalDetails').textContent = 'Silence detected';
+            }
+            
+            addFrameToSpectrogram(freqData, magData);
+            drawSpectrogram();
+            
+            frameCount++;
+            if (time - lastFpsUpdate >= 1000) {
+                currentFPS = frameCount;
+                document.getElementById('fpsCounter').textContent = currentFPS;
+                frameCount = 0;
+                lastFpsUpdate = time;
+            }
+            
+            animationId = requestAnimationFrame(processFrame);
+        }
+        
+        // ==================== START/STOP ====================
+        async function startApp() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaStream = stream;
+                
+                source = audioContext.createMediaStreamSource(stream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                analyser.smoothingTimeConstant = 0.8;
+                source.connect(analyser);
+                
+                resizeCanvas();
+                isRunning = true;
+                startTime = Date.now();
+                
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                document.getElementById('recordBtn').disabled = false;
+                document.getElementById('exportImageBtn').disabled = false;
+                document.getElementById('exportAudioBtn').disabled = false;
+                
+                processFrame(performance.now());
+            } catch (err) {
+                console.error('Error starting app:', err);
+                alert('Microphone permission denied. Please enable microphone access and restart.');
+            }
+        }
+        
+        function stopApp() {
+            isRunning = false;
+            if (animationId) cancelAnimationFrame(animationId);
+            if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
+            if (audioContext) { audioContext.close(); audioContext = null; }
+            
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('recordBtn').disabled = true;
+            document.getElementById('fundamentalNote').textContent = '--';
+            document.getElementById('fundamentalDetails').textContent = 'Stopped';
+            document.getElementById('exportImageBtn').disabled = true;
+            document.getElementById('exportAudioBtn').disabled = true;
+        }
+        
+        // ==================== RECORDING ====================
+        function startRecording() {
+            if (!mediaStream) return;
+            recorder = new MediaRecorder(mediaStream);
+            recordedChunks = [];
+            audioBlob = null;
+            
+            recorder.ondataavailable = (event) => {
+                if (event.data.size > 0) recordedChunks.push(event.data);
+            };
+            
+            recorder.onstop = () => {
+                audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                const url = URL.createObjectURL(audioBlob);
+                addRecordingToUI(url);
+            };
+            
+            recorder.start();
+            document.getElementById('recordBtn').textContent = '■ Stop Rec';
+            document.getElementById('recordBtn').classList.add('danger');
+        }
+        
+        function stopRecording() {
+            if (recorder && recorder.state !== 'inactive') {
+                recorder.stop();
+                document.getElementById('recordBtn').textContent = '● Record';
+                document.getElementById('recordBtn').classList.remove('danger');
+            }
+        }
+        
+        function addRecordingToUI(url) {
+            const list = document.getElementById('recordingList');
+            if (list.children.length === 1 && list.firstChild.tagName === 'P') list.innerHTML = '';
+            
+            const item = document.createElement('div');
+            item.className = 'recording-item';
+            const audio = document.createElement('audio');
+            audio.controls = true;
+            audio.src = url;
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = 'Delete';
+            deleteBtn.onclick = () => { URL.revokeObjectURL(url); item.remove(); };
+            
+            item.appendChild(audio);
+            item.appendChild(deleteBtn);
+            list.insertBefore(item, list.firstChild);
+        }
+        
+        // ==================== EXPORT ====================
+        function exportSpectrogramImage() {
+            if (!isRunning) { alert('Start the app first to capture spectrogram'); return; }
+            const canvasData = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `spectrogram_${Date.now()}.png`;
+            link.href = canvasData;
+            link.click();
+        }
+        
+        function downloadAudio() {
+            if (!audioBlob) { alert('No recording to download. Use Record to capture audio first.'); return; }
+            const url = URL.createObjectURL(audioBlob);
+            const link = document.createElement('a');
+            link.download = `singing_session_${Date.now()}.webm`;
+            link.href = url;
+            link.click();
+        }
+        
+        function downloadSessionLog() {
+            const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+            const fundamentalNote = document.getElementById('fundamentalNote').textContent;
+            const fundamentalDetails = document.getElementById('fundamentalDetails').textContent;
+            const targetDisplay = targetFreq ? targetFreq + ' Hz' : 'None';
+            const activeVoice = document.querySelector('.voice-range-btn.active');
+            const voiceRange = activeVoice ? activeVoice.textContent : 'None';
+            
+            const logContent = `
+SINGING SESSION LOG
+==================
+Timestamp: ${timestamp}
+Fundamental Pitch: ${fundamentalNote}
+Details: ${fundamentalDetails}
+Target Frequency: ${targetDisplay}
+Active Voice Range: ${voiceRange}
+Exported from Voice-Tastic Singer's Spectrogram
+            `.trim();
+            
+            const blob = new Blob([logContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `session_log_${timestamp}.txt`;
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // ==================== EVENT LISTENERS ====================
+        document.getElementById('startBtn').onclick = startApp;
+        document.getElementById('stopBtn').onclick = stopApp;
+        document.getElementById('recordBtn').onclick = () => {
+            if (document.getElementById('recordBtn').textContent.includes('Stop')) stopRecording();
+            else startRecording();
+        };
+        document.getElementById('clearBtn').onclick = () => {
+            spectrogramData = [];
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        };
+        document.getElementById('exportImageBtn').onclick = exportSpectrogramImage;
+        document.getElementById('exportAudioBtn').onclick = downloadAudio;
+        document.getElementById('downloadTargetBtn').onclick = downloadSessionLog;
+        
+        document.querySelectorAll('.voice-range-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.voice-range-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (isRunning) drawSpectrogram();
+            });
+        });
+        
+        const targetSelect = document.getElementById('targetNoteSelect');
+        const customInput = document.getElementById('customFreqInput');
+        const toggleBtn = document.getElementById('toggleTargetLine');
+        const removeBtn = document.getElementById('removeTargetLine');
+        
+        targetSelect.addEventListener('change', () => {
+            const value = targetSelect.value;
+            if (value === 'custom') {
+                customInput.style.display = 'inline-block';
+                customInput.focus();
+                targetFreq = 0;
+                toggleBtn.disabled = true;
+                removeBtn.disabled = true;
+            } else if (value) {
+                customInput.style.display = 'none';
+                targetFreq = parseFloat(value);
+                toggleBtn.disabled = false;
+                removeBtn.disabled = false;
+                toggleBtn.textContent = 'Hide Line';
+            } else {
+                customInput.style.display = 'none';
+                targetFreq = 0;
+                toggleBtn.disabled = true;
+                removeBtn.disabled = true;
+            }
+            if (isRunning) drawSpectrogram();
+        });
+        
+        customInput.addEventListener('input', () => {
+            const freq = parseFloat(customInput.value);
+            if (freq > 20 && freq <= 18000) {
+                targetFreq = freq;
+                toggleBtn.disabled = false;
+                removeBtn.disabled = false;
+            }
+            if (isRunning) drawSpectrogram();
+        });
+        
+        toggleBtn.addEventListener('click', () => {
+            if (targetFreq > 0) {
+                targetFreq = 0;
+                toggleBtn.textContent = 'Show Line';
+            } else {
+                const selVal = targetSelect.value;
+                if (selVal && selVal !== 'custom') targetFreq = parseFloat(selVal);
+                toggleBtn.textContent = 'Hide Line';
+            }
+            if (isRunning) drawSpectrogram();
+        });
+        
+        removeBtn.addEventListener('click', () => {
+            targetFreq = 0;
+            targetSelect.value = '';
+            toggleBtn.disabled = true;
+            removeBtn.disabled = true;
+            if (isRunning) drawSpectrogram();
+        });
+        
+        // ==================== HARMONICS TOGGLE ====================
+        document.getElementById('harmonicsToggle').onclick = () => {
+            harmonicsEnabled = !harmonicsEnabled;
+            const btn = document.getElementById('harmonicsToggle');
+            const panel = document.getElementById('harmonicsPanel');
+            btn.textContent = `📈 Harmonics: ${harmonicsEnabled ? 'On' : 'Off'}`;
+            btn.classList.toggle('primary', harmonicsEnabled);
+            btn.classList.toggle('secondary', !harmonicsEnabled);
+            panel.classList.toggle('visible', harmonicsEnabled);
+            if (!harmonicsEnabled) {
+                smoothHarm.fill(-100);
+                document.getElementById('harmonicTable').innerHTML = '';
+                const bc = document.getElementById('harmonicBars');
+                bc.getContext('2d').clearRect(0, 0, bc.width, bc.height);
+            }
+        };
+        
+        // ==================== CROSSHAIR ====================
+        function handlePointerMove(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const svg = document.getElementById('crosshair');
+            svg.innerHTML = `<line x1="${x}" y1="0" x2="${x}" y2="${canvas.height}" stroke="#6d4aff" stroke-width="2"/>
+                            <line x1="0" y1="${y}" x2="${canvas.width}" y2="${y}" stroke="#6d4aff" stroke-width="2"/>`;
+            
+            if (spectrogramData.length === 0) {
+                document.getElementById('cursorFreq').textContent = '-- Hz';
+                document.getElementById('cursorNote').textContent = '--';
+                document.getElementById('cursorDb').textContent = '-- dB';
+                document.getElementById('hoverStatus').textContent = 'Start listening first';
+                return;
+            }
+            
+            const height = canvas.height;
+            const binIndex = Math.floor((height - y) / height * 1024);
+            const currentData = spectrogramData[spectrogramData.length - 1];
+            
+            if (!currentData || binIndex < 0 || binIndex >= currentData.freq.length) return;
+            
+            const frequency = getFrequencyFromBin(binIndex);
+            const note = freqToNote(frequency);
+            const amplitude = currentData.magnitude[binIndex];
+            const db = amplitudeToDb(amplitude);
+            
+            document.getElementById('cursorFreq').textContent = `${Math.round(frequency)} Hz`;
+            document.getElementById('cursorNote').textContent = note.note !== '--' ? `${note.full} (${note.cents:+d}¢)` : '--';
+            document.getElementById('cursorDb').textContent = isFinite(db) ? `${db.toFixed(1)} dB` : '-∞ dB';
+            
+            const activeVoice = document.querySelector('.voice-range-btn.active');
+            if (activeVoice) {
+                const range = VOICE_RANGES[activeVoice.dataset.voice];
+                if (frequency >= range.min && frequency <= range.max) {
+                    document.getElementById('hoverStatus').textContent = `Within ${VOICE_RANGES[activeVoice.dataset.voice].name} range ✓ Click to hear`;
+                } else {
+                    document.getElementById('hoverStatus').textContent = `Outside ${VOICE_RANGES[activeVoice.dataset.voice].name} range | Click to hear`;
+                }
+            } else {
+                document.getElementById('hoverStatus').textContent = 'Click to hear tone';
+            }
+        }
+        
+        function handleClick(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (spectrogramData.length === 0) return;
+            
+            const height = canvas.height;
+            const binIndex = Math.floor((height - y) / height * 1024);
+            const frequency = getFrequencyFromBin(binIndex);
+            
+            if (frequency > MIN_FREQ && frequency <= MAX_FREQ) {
+                playToneAtFrequency(frequency);
+                const flash = document.createElement('div');
+                flash.style.position = 'absolute';
+                flash.style.left = `${x}px`;
+                flash.style.top = `${y}px`;
+                flash.style.width = '20px';
+                flash.style.height = '20px';
+                flash.style.background = '#fff';
+                flash.style.borderRadius = '50%';
+                flash.style.transform = 'translate(-50%, -50%)';
+                flash.style.pointerEvents = 'none';
+                document.querySelector('.canvas-container').appendChild(flash);
+                setTimeout(() => flash.remove(), 200);
+            }
+        }
+        
+        function playToneAtFrequency(frequency, duration = 2000) {
+            if (!audioContext) { alert('Please start the app first.'); return; }
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration / 1000);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration / 1000);
+        }
+        
+        canvas.addEventListener('mousemove', handlePointerMove);
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            handlePointerMove(e.touches[0]);
+        }, { passive: false });
+        canvas.addEventListener('click', handleClick);
+        canvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            if (e.changedTouches.length > 0) handleClick(e.changedTouches[0]);
+        });
+        
+        window.addEventListener('resize', resizeCanvas);
+        
+        // ==================== INIT ====================
+        resizeCanvas();
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        if ('wakeLock' in navigator) {
+            try { navigator.wakeLock.request('screen'); } catch (e) {}
+        }
+    </script>
+</body>
+</html>
