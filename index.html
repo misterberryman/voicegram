@@ -34,6 +34,49 @@
             font-weight: 500;
         }
 
+        .error-banner {
+            display: none;
+            background: #c0392b;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            border-bottom: 2px solid #e74c3c;
+            animation: slideDown 0.3s ease;
+        }
+
+        .error-banner.visible {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .debug-panel {
+            display: none;
+            background: #0a0a14;
+            padding: 10px 15px;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+            border-bottom: 1px solid #333;
+        }
+
+        .debug-panel.visible {
+            display: block;
+        }
+
+        .debug-toggle {
+            display: inline-block;
+            padding: 4px 10px;
+            background: #333;
+            color: #888;
+            font-size: 11px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
         .pitch-display {
             background: rgba(109, 76, 255, 0.3);
             padding: 12px 16px;
@@ -341,6 +384,13 @@
             color: #ccc;
         }
 
+        .hidden-debug-log {
+            position: absolute;
+            left: -9999px;
+            width: 1px;
+            height: 1px;
+        }
+
         @media (max-width: 600px) {
             .fundamental-pitch {
                 font-size: 36px;
@@ -361,7 +411,17 @@
 </head>
 <body>
     <div class="header">
-        <h1>Voicegram</h1>
+        <h1>🎵 Voicegram</h1>
+    </div>
+
+    <div class="error-banner" id="errorBanner">
+        <strong>⚠️ Error:</strong> <span id="errorMessage">Something went wrong</span>
+        <button onclick="dismissError()" style="margin-left: 15px; padding: 5px 12px; font-size: 12px; min-width: auto;">Dismiss</button>
+    </div>
+
+    <div class="debug-panel" id="debugPanel">
+        <div><strong>Debug Info:</strong></div>
+        <div id="debugLog" style="white-space: pre-wrap; margin-top: 5px;"></div>
     </div>
 
     <div class="pitch-display">
@@ -381,6 +441,8 @@
         <span class="status-item">📊 FFT Size: 2048</span>
         <span class="status-item">🎚️ Sample Rate: <span id="sampleRate">--</span> Hz</span>
         <span class="status-item">🔋 FPS: <span id="fpsCounter">--</span></span>
+        <span class="status-item">🔒 Secure: <span id="secureContext">--</span></span>
+        <span class="status-item">🎤 MediaDevices: <span id="mediaDevices">--</span></span>
     </div>
 
     <div class="crosshair-info">
@@ -471,6 +533,7 @@
                 <button id="exportImageBtn" class="success" disabled>📷 Export Image</button>
                 <button id="exportAudioBtn" class="success" disabled>🎵 Download Audio</button>
                 <button id="downloadTargetBtn" class="secondary" disabled>📝 Log Session</button>
+                <button id="fullscreenBtn" class="secondary">⛶ Fullscreen</button>
             </div>
         </div>
     </div>
@@ -490,11 +553,43 @@
         <p><strong>🎙️ Recording:</strong> Tap Record to capture audio. Replay and compare later.</p>
         <p><strong>🎼 Voice Ranges:</strong> Select Soprano/Alto/Tenor/Baritone/Bass to see typical ranges overlayed.</p>
         <p><strong>🎯 Target Pitch:</strong> Choose a note to draw a green target line. Your pitch turns green when within ±3%.</p>
-        <p><strong>📈 Harmonics:</strong> Toggle ON to see strength of up to 16 overtones in a bar chart and table. Helps analyze vocal richness, breathiness, and resonance.</p>
-        <p><strong>💾 Export:</strong> Save spectrogram images, download recordings, or export session logs for lesson notes.</p>
+        <p><strong>📈 Harmonics:</strong> Toggle ON to see strength of up to 16 overtones in a bar chart and table.</p>
+        <p><strong>⛶ Fullscreen:</strong> Maximize the spectrogram area for desktop use.</p>
+        <p><strong>🔍 Debug:</strong> Toggle debug panel to see detailed error information if Start doesn't work.</p>
     </div>
 
     <script>
+        // ==================== DEBUG SYSTEM ====================
+        const debugLog = [];
+        
+        function log(msg) {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${msg}`;
+            debugLog.push(entry);
+            // Keep only last 20 entries for the visible panel
+            const visibleLog = debugLog.slice(-20).join('\n');
+            document.getElementById('debugLog').textContent = visibleLog || 'No debug entries';
+            console.log(entry);
+        }
+        
+        function showError(title, message) {
+            const banner = document.getElementById('errorBanner');
+            const msgEl = document.getElementById('errorMessage');
+            msgEl.textContent = `${title}: ${message}`;
+            banner.classList.add('visible');
+            log(`ERROR: ${title} - ${message}`);
+        }
+        
+        function dismissError() {
+            document.getElementById('errorBanner').classList.remove('visible');
+        }
+        
+        function toggleDebug() {
+            const panel = document.getElementById('debugPanel');
+            panel.classList.toggle('visible');
+            log(`Debug panel toggled: ${panel.classList.contains('visible') ? 'VISIBLE' : 'HIDDEN'}`);
+        }
+
         // ==================== GLOBALS ====================
         let audioContext = null;
         let analyser = null;
@@ -544,6 +639,23 @@
         const HARMONICS_TO_SHOW = 16;
         const HARMONIC_FLOOR_DB = -80;
         
+        // ==================== DEBUG INIT ====================
+        log('========================================');
+        log(`Page loaded at: ${window.location.href}`);
+        log(`Secure context: ${window.isSecureContext ? 'YES ✓' : 'NO ✗'}`);
+        log(`Protocol: ${window.location.protocol}`);
+        
+        // Check if getUserMedia is available
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            log('MediaDevices.getUserMedia: AVAILABLE ✓');
+            document.getElementById('mediaDevices').textContent = '✓ Yes';
+        } else {
+            log('MediaDevices.getUserMedia: UNAVAILABLE ✗');
+            document.getElementById('mediaDevices').textContent = '✗ No';
+        }
+        
+        document.getElementById('secureContext').textContent = window.isSecureContext ? '✓ Yes' : '✗ No';
+
         // ==================== COLOR MAP ====================
         function amplitudeToColor(amplitude, maxAmplitude) {
             if (maxAmplitude === 0) return { r: 0, g: 0, b: 0 };
@@ -869,10 +981,29 @@
         
         // ==================== START/STOP ====================
         async function startApp() {
+            // Pre-flight checks
+            if (!window.isSecureContext) {
+                showError('Not Secure Context', 
+                    'Microphone access requires HTTPS or localhost. Current URL: ' + window.location.href + 
+                    '. Fix: Host on GitHub Pages (HTTPS) or a web server.');
+                return;
+            }
+            
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                showError('API Unavailable', 
+                    'navigator.mediaDevices undefined. This is usually caused by embedding in an iframe without permissions. ' +
+                    'Fix: Open this page directly (not embedded) at a HTTPS address.');
+                return;
+            }
+            
             try {
+                log('Requesting microphone access...');
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 mediaStream = stream;
+                
+                log('Microphone granted! Creating audio nodes...');
                 
                 source = audioContext.createMediaStreamSource(stream);
                 analyser = audioContext.createAnalyser();
@@ -890,10 +1021,33 @@
                 document.getElementById('exportImageBtn').disabled = false;
                 document.getElementById('exportAudioBtn').disabled = false;
                 
+                document.getElementById('sampleRate').textContent = audioContext.sampleRate;
+                log(`AudioContext created, sample rate: ${audioContext.sampleRate} Hz`);
+                
                 processFrame(performance.now());
+                log('Main loop started');
+                
             } catch (err) {
-                console.error('Error starting app:', err);
-                alert('Microphone permission denied. Please enable microphone access and restart.');
+                log(`Mic request failed: ${err.name} - ${err.message}`);
+                
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    showError('Permission Denied', 
+                        'Microphone permission was denied. Check browser/site settings to allow microphone access.');
+                } else if (err.name === 'NotFoundError') {
+                    showError('No Microphone Found', 
+                        'No microphone detected. Connect a microphone or check device settings.');
+                } else if (err.name === 'NotReadableError') {
+                    showError('Device In Use', 
+                        'Another application is using the microphone. Close other programs and try again.');
+                } else {
+                    showError('Unknown Error', 
+                        `${err.name}: ${err.message}. Check the debug panel for more details.`);
+                }
+                
+                if (audioContext) {
+                    audioContext.close();
+                    audioContext = null;
+                }
             }
         }
         
@@ -902,6 +1056,8 @@
             if (animationId) cancelAnimationFrame(animationId);
             if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
             if (audioContext) { audioContext.close(); audioContext = null; }
+            
+            log('App stopped');
             
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
@@ -914,7 +1070,11 @@
         
         // ==================== RECORDING ====================
         function startRecording() {
-            if (!mediaStream) return;
+            if (!mediaStream) {
+                showError('No Stream', 'Start the app first before recording.');
+                return;
+            }
+            
             recorder = new MediaRecorder(mediaStream);
             recordedChunks = [];
             audioBlob = null;
@@ -927,9 +1087,11 @@
                 audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
                 const url = URL.createObjectURL(audioBlob);
                 addRecordingToUI(url);
+                log('Recording saved');
             };
             
             recorder.start();
+            log('Recording started');
             document.getElementById('recordBtn').textContent = '■ Stop Rec';
             document.getElementById('recordBtn').classList.add('danger');
         }
@@ -963,21 +1125,29 @@
         
         // ==================== EXPORT ====================
         function exportSpectrogramImage() {
-            if (!isRunning) { alert('Start the app first to capture spectrogram'); return; }
+            if (!isRunning) { 
+                showError('Cannot Export', 'Start the app first to capture spectrogram'); 
+                return; 
+            }
             const canvasData = canvas.toDataURL('image/png');
             const link = document.createElement('a');
             link.download = `spectrogram_${Date.now()}.png`;
             link.href = canvasData;
             link.click();
+            log('Image exported');
         }
         
         function downloadAudio() {
-            if (!audioBlob) { alert('No recording to download. Use Record to capture audio first.'); return; }
+            if (!audioBlob) { 
+                showError('No Recording', 'Use Record to capture audio first.'); 
+                return; 
+            }
             const url = URL.createObjectURL(audioBlob);
             const link = document.createElement('a');
             link.download = `singing_session_${Date.now()}.webm`;
             link.href = url;
             link.click();
+            log('Audio downloaded');
         }
         
         function downloadSessionLog() {
@@ -996,6 +1166,7 @@ Fundamental Pitch: ${fundamentalNote}
 Details: ${fundamentalDetails}
 Target Frequency: ${targetDisplay}
 Active Voice Range: ${voiceRange}
+URL: ${window.location.href}
 Exported from Voicegram
             `.trim();
             
@@ -1006,6 +1177,17 @@ Exported from Voicegram
             link.href = url;
             link.click();
             URL.revokeObjectURL(url);
+            log('Session log exported');
+        }
+        
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                log('Entered fullscreen');
+            } else {
+                document.exitFullscreen();
+                log('Exited fullscreen');
+            }
         }
         
         // ==================== EVENT LISTENERS ====================
@@ -1023,6 +1205,7 @@ Exported from Voicegram
         document.getElementById('exportImageBtn').onclick = exportSpectrogramImage;
         document.getElementById('exportAudioBtn').onclick = downloadAudio;
         document.getElementById('downloadTargetBtn').onclick = downloadSessionLog;
+        document.getElementById('fullscreenBtn').onclick = toggleFullscreen;
         
         document.querySelectorAll('.voice-range-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -1031,6 +1214,18 @@ Exported from Voicegram
                 if (isRunning) drawSpectrogram();
             });
         });
+        
+        // Debug panel toggle
+        const debugPanel = document.getElementById('debugPanel');
+        const debugToggle = document.createElement('button');
+        debugToggle.className = 'secondary';
+        debugToggle.style.cssText = 'font-size:12px;padding:4px 8px;margin-left:8px;min-width:auto;';
+        debugToggle.textContent = '🔍 Debug';
+        debugToggle.onclick = () => {
+            debugPanel.classList.toggle('visible');
+            debugToggle.textContent = debugPanel.classList.contains('visible') ? '🔍 Hide Debug' : '🔍 Debug';
+        };
+        document.querySelector('.controls').appendChild(debugToggle);
         
         const targetSelect = document.getElementById('targetNoteSelect');
         const customInput = document.getElementById('customFreqInput');
@@ -1051,6 +1246,7 @@ Exported from Voicegram
                 toggleBtn.disabled = false;
                 removeBtn.disabled = false;
                 toggleBtn.textContent = 'Hide Line';
+                log(`Target set to ${value} Hz`);
             } else {
                 customInput.style.display = 'none';
                 targetFreq = 0;
@@ -1099,6 +1295,7 @@ Exported from Voicegram
             btn.classList.toggle('primary', harmonicsEnabled);
             btn.classList.toggle('secondary', !harmonicsEnabled);
             panel.classList.toggle('visible', harmonicsEnabled);
+            log(`Harmonics panel: ${harmonicsEnabled ? 'ENABLED' : 'DISABLED'}`);
             if (!harmonicsEnabled) {
                 smoothHarm.fill(-100);
                 document.getElementById('harmonicTable').innerHTML = '';
@@ -1178,11 +1375,15 @@ Exported from Voicegram
                 flash.style.pointerEvents = 'none';
                 document.querySelector('.canvas-container').appendChild(flash);
                 setTimeout(() => flash.remove(), 200);
+                log(`Clicked at ${Math.round(frequency)} Hz (${freqToNote(frequency).full})`);
             }
         }
         
         function playToneAtFrequency(frequency, duration = 2000) {
-            if (!audioContext) { alert('Please start the app first.'); return; }
+            if (!audioContext) { 
+                showError('Not Ready', 'Please start the app first.'); 
+                return; 
+            }
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             oscillator.type = 'sine';
@@ -1193,6 +1394,7 @@ Exported from Voicegram
             gainNode.connect(audioContext.destination);
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + duration / 1000);
+            log(`Playing tone at ${frequency.toFixed(0)} Hz`);
         }
         
         canvas.addEventListener('mousemove', handlePointerMove);
@@ -1216,6 +1418,9 @@ Exported from Voicegram
         if ('wakeLock' in navigator) {
             try { navigator.wakeLock.request('screen'); } catch (e) {}
         }
+        
+        log('========================================');
+        log('Initialization complete');
     </script>
 </body>
 </html>
