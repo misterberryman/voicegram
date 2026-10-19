@@ -5,66 +5,56 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Voicegram</title>
 <style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
-body { font-family:'Segoe UI',Arial,sans-serif; background:#1a1a2e; color:#eee; overflow-x:hidden; min-height:100vh; }
-.header { padding:12px 16px; background:linear-gradient(135deg,#6d4aff,#4a3ab8); text-align:center; box-shadow:0 2px 10px rgba(0,0,0,0.3); }
-.header h1 { font-size:18px; font-weight:500; }
-.error-banner { display:none; background:#c0392b; color:#fff; padding:15px 20px; text-align:center; border-bottom:2px solid #e74c3c; }
-.error-banner.visible { display:block; }
-.debug-panel { display:none; background:#0a0a14; padding:10px 15px; font-size:12px; font-family:'Courier New',monospace; border-bottom:1px solid #333; }
-.debug-panel.visible { display:block; }
-#debugLog { white-space:pre-wrap; margin-top:5px; color:#9fe8b0; }
-.pitch-display { background:rgba(109,76,255,0.3); padding:12px 16px; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); }
-.fundamental-pitch { font-size:48px; font-weight:bold; color:#fff; line-height:1; }
-.fundamental-details { font-size:18px; color:#ccc; margin-top:4px; }
-.controls { display:flex; flex-wrap:wrap; gap:8px; padding:12px; justify-content:center; background:#252542; }
-button { padding:12px 24px; font-size:16px; border:none; border-radius:8px; cursor:pointer; font-weight:600; transition:all 0.2s ease; min-width:120px; }
-button.primary { background:linear-gradient(135deg,#6d4aff,#4a3ab8); color:#fff; }
-button.danger { background:linear-gradient(135deg,#ff4757,#c0392b); color:#fff; }
-button.secondary { background:#3a3a5a; color:#ddd; }
-button.success { background:linear-gradient(135deg,#27ae60,#1e8449); color:#fff; }
-button:active { transform:scale(0.97); }
-button:disabled { opacity:0.5; cursor:not-allowed; }
-.status-bar { padding:8px 16px; background:#2a2a4a; font-size:14px; display:flex; justify-content:space-around; flex-wrap:wrap; }
-.status-item { padding:4px 12px; background:rgba(0,0,0,0.2); border-radius:4px; margin:2px; }
-.crosshair-info { padding:10px 16px; background:rgba(109,76,255,0.4); border-bottom:1px solid rgba(255,255,255,0.1); font-size:14px; display:flex; flex-wrap:wrap; gap:16px; align-items:center; }
-.crosshair-section { display:flex; align-items:baseline; gap:6px; }
-.crosshair-label { color:#aaa; font-size:12px; text-transform:uppercase; }
-.crosshair-value { font-weight:bold; font-size:16px; }
-.canvas-container { position:relative; width:100%; height:50vh; min-height:300px; background:#000; overflow:hidden; }
-#spectrogram { width:100%; height:100%; cursor:crosshair; touch-action:none; }
-#crosshair { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; }
-.harmonics-panel { display:none; padding:12px; background:#20203a; border-top:1px solid rgba(255,255,255,0.1); }
-.harmonics-panel.visible { display:block; }
-#harmonicBars { width:100%; height:180px; background:#0e0e1a; border-radius:6px; display:block; }
-.harmonics-table { width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
-.harmonics-table th, .harmonics-table td { padding:4px 8px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.08); }
-.harmonics-table th { color:#aaa; font-size:11px; text-transform:uppercase; }
-.h-dominant { color:#00ff88; font-weight:bold; }
-.tools-panel { padding:12px; background:#2a2a4a; border-top:1px solid rgba(255,255,255,0.1); }
-.tools-row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:center; margin-bottom:8px; }
-.tools-row:last-child { margin-bottom:0; }
-.voice-range-buttons { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; }
-.voice-range-btn { padding:8px 16px; font-size:14px; min-width:auto; }
-.voice-range-btn.active { background:linear-gradient(135deg,#f39c12,#e67e22); color:#fff; box-shadow:0 0 10px rgba(243,156,18,0.5); }
-.target-selector { display:flex; flex-wrap:wrap; gap:8px; align-items:center; justify-content:center; background:rgba(0,0,0,0.2); padding:8px 12px; border-radius:6px; }
-.target-selector select { padding:8px 12px; font-size:14px; border:1px solid #6d4aff; border-radius:4px; background:#1a1a2e; color:#fff; min-width:100px; }
-.target-selector label { color:#aaa; font-size:12px; text-transform:uppercase; }
-.export-options { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; }
-.recordings { padding:16px; background:#252542; }
-.recordings h3 { margin-bottom:12px; font-size:16px; color:#ccc; }
-.recording-list { display:grid; gap:8px; max-height:200px; overflow-y:auto; }
-.recording-item { display:flex; align-items:center; gap:12px; padding:12px; background:rgba(109,76,255,0.2); border-radius:6px; }
-.recording-item audio { flex:1; height:40px; }
-.delete-btn { padding:6px 12px; background:#c0392b; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:12px; }
-.instructions { padding:16px; background:rgba(109,76,255,0.1); font-size:14px; line-height:1.6; }
-.instructions h3 { margin-bottom:8px; color:#ccc; }
-@media (max-width:600px) {
-  .fundamental-pitch { font-size:36px; }
-  .controls { gap:6px; }
-  button { padding:10px 16px; font-size:14px; min-width:auto; }
-  .canvas-container { height:45vh; }
-}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-user-select:none;user-select:none}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#1a1a2e;color:#eee;overflow-x:hidden}
+.header{padding:12px;background:linear-gradient(135deg,#6d4aff,#4a3ab8);text-align:center}
+.header h1{font-size:18px;font-weight:500}
+.error-banner{display:none;background:#c0392b;color:#fff;padding:14px;text-align:center}
+.error-banner.visible{display:block}
+.debug-panel{display:none;background:#0a0a14;padding:10px 14px;font-size:12px;font-family:'Courier New',monospace;border-bottom:1px solid #333}
+.debug-panel.visible{display:block}
+#debugLog{white-space:pre-wrap;margin-top:5px;color:#9fe8b0}
+.pitch-display{background:rgba(109,76,255,.3);padding:12px;text-align:center}
+.fundamental-pitch{font-size:48px;font-weight:bold;line-height:1}
+.fundamental-details{font-size:18px;color:#ccc;margin-top:4px}
+.controls{display:flex;flex-wrap:wrap;gap:8px;padding:12px;justify-content:center;background:#252542}
+button{padding:12px 24px;font-size:16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;min-width:120px}
+button.primary{background:linear-gradient(135deg,#6d4aff,#4a3ab8);color:#fff}
+button.danger{background:linear-gradient(135deg,#ff4757,#c0392b);color:#fff}
+button.secondary{background:#3a3a5a;color:#ddd}
+button.success{background:linear-gradient(135deg,#27ae60,#1e8449);color:#fff}
+button:disabled{opacity:.5;cursor:not-allowed}
+.status-bar{padding:8px 16px;background:#2a2a4a;font-size:14px;display:flex;justify-content:space-around;flex-wrap:wrap}
+.status-item{padding:4px 12px;background:rgba(0,0,0,.2);border-radius:4px;margin:2px}
+.crosshair-info{padding:10px 16px;background:rgba(109,76,255,.4);font-size:14px;display:flex;flex-wrap:wrap;gap:16px}
+.crosshair-label{color:#aaa;font-size:12px;text-transform:uppercase}
+.crosshair-value{font-weight:bold;font-size:16px}
+.canvas-container{position:relative;width:100%;height:50vh;min-height:300px;background:#000;overflow:hidden}
+#spectrogram{width:100%;height:100%;cursor:crosshair;touch-action:none}
+#crosshair{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.harmonics-panel{display:none;padding:12px;background:#20203a}
+.harmonics-panel.visible{display:block}
+#harmonicBars{width:100%;height:180px;background:#0e0e1a;border-radius:6px;display:block}
+.harmonics-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.harmonics-table th,.harmonics-table td{padding:4px 8px;text-align:left;border-bottom:1px solid rgba(255,255,255,.08)}
+.harmonics-table th{color:#aaa;font-size:11px;text-transform:uppercase}
+.h-dominant{color:#00ff88;font-weight:bold}
+.tools-panel{padding:12px;background:#2a2a4a}
+.tools-row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:center;margin-bottom:8px}
+.voice-range-btn{padding:8px 16px;font-size:14px;min-width:auto}
+.voice-range-btn.active{background:linear-gradient(135deg,#f39c12,#e67e22);color:#fff}
+.target-selector{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:rgba(0,0,0,.2);padding:8px 12px;border-radius:6px}
+.target-selector select{padding:8px 12px;font-size:14px;border:1px solid #6d4aff;border-radius:4px;background:#1a1a2e;color:#fff}
+.target-selector label{color:#aaa;font-size:12px;text-transform:uppercase}
+#customFreqInput{display:none;padding:8px;width:110px;border:1px solid #6d4aff;border-radius:4px;background:#1a1a2e;color:#fff}
+.export-options{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.recordings{padding:16px;background:#252542}
+.recording-list{display:grid;gap:8px;max-height:200px;overflow-y:auto}
+.recording-item{display:flex;align-items:center;gap:12px;padding:12px;background:rgba(109,76,255,.2);border-radius:6px}
+.recording-item audio{flex:1;height:40px}
+.delete-btn{padding:6px 12px;background:#c0392b;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px}
+.instructions{padding:16px;background:rgba(109,76,255,.1);font-size:14px;line-height:1.6}
+@media(max-width:600px){.fundamental-pitch{font-size:36px}button{padding:10px 16px;font-size:14px;min-width:auto}.canvas-container{height:45vh}}
 </style>
 </head>
 <body>
@@ -72,8 +62,8 @@ button:disabled { opacity:0.5; cursor:not-allowed; }
 <div class="header"><h1>&#127925; Voicegram</h1></div>
 
 <div class="error-banner" id="errorBanner">
-  <strong>&#9888;&#65039; Error:</strong> <span id="errorMessage">Something went wrong</span>
-  <button onclick="dismissError()" style="margin-left:15px;padding:5px 12px;font-size:12px;min-width:auto;">Dismiss</button>
+  <strong>&#9888; Error:</strong> <span id="errorMessage">Something went wrong</span>
+  <button onclick="dismissError()" style="margin-left:15px;padding:5px 12px;font-size:12px;min-width:auto">Dismiss</button>
 </div>
 
 <div class="debug-panel visible" id="debugPanel">
@@ -92,22 +82,22 @@ button:disabled { opacity:0.5; cursor:not-allowed; }
   <button id="recordBtn" class="secondary" disabled>&#9679; Record</button>
   <button id="clearBtn" class="secondary">Clear</button>
   <button id="harmonicsToggle" class="secondary">&#128200; Harmonics: Off</button>
-  <button id="debugToggleBtn" class="secondary" onclick="toggleDebug()" style="font-size:12px;padding:6px 10px;min-width:auto;">&#128269; Hide Debug</button>
+  <button id="debugToggleBtn" class="secondary" onclick="toggleDebug()" style="font-size:12px;padding:6px 10px;min-width:auto">&#128269; Hide Debug</button>
 </div>
 
 <div class="status-bar">
-  <span class="status-item">&#128202; FFT Size: 2048</span>
-  <span class="status-item">&#127898;&#65039; Sample Rate: <span id="sampleRate">--</span> Hz</span>
-  <span class="status-item">&#128267; FPS: <span id="fpsCounter">--</span></span>
-  <span class="status-item">&#128274; Secure: <span id="secureContext">--</span></span>
-  <span class="status-item">&#127908; MediaDevices: <span id="mediaDevices">--</span></span>
+  <span class="status-item">FFT: 2048</span>
+  <span class="status-item">Sample Rate: <span id="sampleRate">--</span> Hz</span>
+  <span class="status-item">FPS: <span id="fpsCounter">--</span></span>
+  <span class="status-item">Secure: <span id="secureContext">--</span></span>
+  <span class="status-item">MediaDevices: <span id="mediaDevices">--</span></span>
 </div>
 
 <div class="crosshair-info">
-  <div class="crosshair-section"><span class="crosshair-label">Freq:</span><span class="crosshair-value" id="cursorFreq">-- Hz</span></div>
-  <div class="crosshair-section"><span class="crosshair-label">Note:</span><span class="crosshair-value" id="cursorNote">--</span></div>
-  <div class="crosshair-section"><span class="crosshair-label">Level:</span><span class="crosshair-value" id="cursorDb">-- dB</span></div>
-  <div class="crosshair-section"><span class="crosshair-label">Status:</span><span class="crosshair-value" id="hoverStatus">Hover for info</span></div>
+  <div><span class="crosshair-label">Freq:</span> <span class="crosshair-value" id="cursorFreq">-- Hz</span></div>
+  <div><span class="crosshair-label">Note:</span> <span class="crosshair-value" id="cursorNote">--</span></div>
+  <div><span class="crosshair-label">Level:</span> <span class="crosshair-value" id="cursorDb">-- dB</span></div>
+  <div><span class="crosshair-label">Status:</span> <span class="crosshair-value" id="hoverStatus">Hover for info</span></div>
 </div>
 
 <div class="canvas-container">
@@ -122,321 +112,688 @@ button:disabled { opacity:0.5; cursor:not-allowed; }
 
 <div class="tools-panel">
   <div class="tools-row">
-    <span style="color:#aaa;font-size:12px;text-transform:uppercase;">Voice Ranges (overlay):</span>
-    <div class="voice-range-buttons">
-      <button class="voice-range-btn secondary" data-voice="soprano">Soprano</button>
-      <button class="voice-range-btn secondary" data-voice="alto">Alto</button>
-      <button class="voice-range-btn secondary" data-voice="tenor">Tenor</button>
-      <button class="voice-range-btn secondary" data-voice="baritone">Baritone</button>
-      <button class="voice-range-btn secondary" data-voice="bass">Bass</button>
-    </div>
+    <span style="color:#aaa;font-size:12px;text-transform:uppercase">Voice Ranges:</span>
+    <button class="voice-range-btn secondary" data-voice="soprano">Soprano</button>
+    <button class="voice-range-btn secondary" data-voice="alto">Alto</button>
+    <button class="voice-range-btn secondary" data-voice="tenor">Tenor</button>
+    <button class="voice-range-btn secondary" data-voice="baritone">Baritone</button>
+    <button class="voice-range-btn secondary" data-voice="bass">Bass</button>
   </div>
-
   <div class="tools-row">
     <div class="target-selector">
-      <label>Target Pitch Line:</label>
+      <label for="targetNoteSelect">Target Pitch Line:</label>
       <select id="targetNoteSelect">
         <option value="">None</option>
-        <optgroup label="Common Singing Notes">
-          <option value="261.63">C4 (Middle C)</option>
-          <option value="277.18">C#4/Db4</option>
-          <option value="293.66">D4</option>
-          <option value="311.13">Eb4/D#4</option>
-          <option value="329.63">E4</option>
-          <option value="349.23">F4</option>
-          <option value="369.99">F#4/Gb4</option>
-          <option value="392.00">G4</option>
-          <option value="415.30">G#4/Ab4</option>
-          <option value="440.00">A4 (Concert Pitch)</option>
-          <option value="466.16">A#4/Bb4</option>
-          <option value="493.88">B4</option>
-          <option value="523.25">C5</option>
-          <option value="554.37">C#5/Db5</option>
-          <option value="587.33">D5</option>
-          <option value="622.25">Eb5/D#5</option>
-          <option value="659.25">E5</option>
-          <option value="698.46">F5</option>
-          <option value="739.99">F#5/Gb5</option>
-          <option value="783.99">G5</option>
-          <option value="830.61">G#5/Ab5</option>
-          <option value="880.00">A5</option>
-        </optgroup>
-        <optgroup label="Custom Frequency">
-          <option value="custom">Custom Hz...</option>
-        </optgroup>
+        <option value="261.63">C4 (Middle C)</option>
+        <option value="293.66">D4</option>
+        <option value="311.13">Eb4</option>
+        <option value="329.63">E4</option>
+        <option value="349.23">F4</option>
+        <option value="369.99">F#4</option>
+        <option value="392.00">G4</option>
+        <option value="415.30">G#4</option>
+        <option value="440.00">A4 (Concert Pitch)</option>
+        <option value="466.16">Bb4</option>
+        <option value="493.88">B4</option>
+        <option value="523.25">C5</option>
+        <option value="587.33">D5</option>
+        <option value="622.25">Eb5</option>
+        <option value="659.25">E5</option>
+        <option value="698.46">F5</option>
+        <option value="783.99">G5</option>
+        <option value="880.00">A5</option>
+        <option value="custom">Custom Hz...</option>
       </select>
-      <input type="number" id="customFreqInput" placeholder="Enter Hz" min="20" max="18000"
-             style="display:none;padding:8px;width:100px;border:1px solid #6d4aff;border-radius:4px;background:#1a1a2e;color:#fff;">
+      <input type="number" id="customFreqInput" placeholder="Hz" min="20" max="18000">
       <button id="toggleTargetLine" class="secondary" disabled>Hide Line</button>
-      <button id="removeTargetLine" class="danger" disabled>X Remove</button>
+      <button id="removeTargetLine" class="danger" disabled>Remove</button>
     </div>
   </div>
-
   <div class="tools-row">
     <div class="export-options">
-      <button id="exportImageBtn" class="success" disabled>&#128247; Export Image</button>
-      <button id="exportAudioBtn" class="success" disabled>&#127925; Download Audio</button>
-      <button id="downloadTargetBtn" class="secondary" disabled>&#128221; Log Session</button>
-      <button id="fullscreenBtn" class="secondary">&#9974; Fullscreen</button>
+      <button id="exportImageBtn" class="success" disabled>Export Image</button>
+      <button id="exportAudioBtn" class="success" disabled>Download Audio</button>
+      <button id="downloadTargetBtn" class="secondary" disabled>Log Session</button>
+      <button id="fullscreenBtn" class="secondary">Fullscreen</button>
     </div>
   </div>
 </div>
 
 <div class="recordings">
-  <h3>&#127897;&#65039; Recordings</h3>
+  <h3>&#127897; Recordings</h3>
   <div class="recording-list" id="recordingList">
-    <p style="color:#888;text-align:center;">No recordings yet. Tap Record to capture.</p>
+    <p style="color:#888;text-align:center">No recordings yet. Tap Record to capture.</p>
   </div>
 </div>
 
 <div class="instructions">
-  <h3>How to use</h3>
-  <p><strong>&#127908; Microphone:</strong> Tap Start to enable the mic and see the live spectrogram.</p>
-  <p><strong>&#128070; Crosshair:</strong> Move your finger or mouse over the spectrogram for frequency, note and loudness.</p>
-  <p><strong>&#128165; Click to Hear:</strong> Tap anywhere to play a 2-second sine wave at that frequency.</p>
-  <p><strong>&#127897;&#65039; Recording:</strong> Tap Record to capture audio, then replay it.</p>
-  <p><strong>&#127932; Voice Ranges:</strong> Overlay a typical range for Soprano/Alto/Tenor/Baritone/Bass.</p>
-  <p><strong>&#127919; Target Pitch:</strong> Draw a green target line; your pitch turns green within &#177;3%.</p>
-  <p><strong>&#128200; Harmonics:</strong> Toggle ON for a bar chart and table of up to 16 overtones.</p>
-  <p><strong>&#128269; Debug:</strong> Leave this panel open until Start works, then hide it.</p>
+  <p><strong>Microphone:</strong> Tap Start, allow the mic, then sing.</p>
+  <p><strong>Crosshair:</strong> Hover for frequency, note and loudness.</p>
+  <p><strong>Click to Hear:</strong> Tap the spectrogram to play a 2-second tone.</p>
+  <p><strong>Record:</strong> Capture audio, then replay it below.</p>
+  <p><strong>Voice Ranges / Target Pitch / Harmonics:</strong> Overlays and overtone analysis.</p>
 </div>
 
-<!-- ============ SCRIPT 1: always runs, even if script 2 fails ============ -->
 <script>
-(function () {
-  var entries = [];
-
-  window.voicegramLog = function (msg) {
-    var t = new Date().toLocaleTimeString();
-    entries.push('[' + t + '] ' + msg);
-    if (entries.length > 40) { entries.shift(); }
-    var el = document.getElementById('debugLog');
-    if (el) { el.textContent = entries.join('\n'); }
-    console.log('[Voicegram] ' + msg);
+(function(){
+  var entries=[];
+  window.vgLog=function(m){
+    var t=new Date().toLocaleTimeString();
+    entries.push('['+t+'] '+m);
+    if(entries.length>40){entries.shift();}
+    var el=document.getElementById('debugLog');
+    if(el){el.textContent=entries.join('\n');}
+    console.log('[Voicegram] '+m);
   };
-
-  window.showError = function (title, message) {
-    var banner = document.getElementById('errorBanner');
-    var msgEl = document.getElementById('errorMessage');
-    if (!banner || !msgEl) { return; }
-    msgEl.textContent = title + ': ' + message;
-    banner.classList.add('visible');
-    window.voicegramLog('ERROR - ' + title + ' - ' + message);
+  window.showError=function(t,m){
+    var b=document.getElementById('errorBanner'),e=document.getElementById('errorMessage');
+    if(!b||!e){return;}
+    e.textContent=t+': '+m;
+    b.classList.add('visible');
+    window.vgLog('ERROR - '+t+' - '+m);
   };
-
-  window.dismissError = function () {
-    var b = document.getElementById('errorBanner');
-    if (b) { b.classList.remove('visible'); }
+  window.dismissError=function(){
+    var b=document.getElementById('errorBanner');
+    if(b){b.classList.remove('visible');}
   };
-
-  window.toggleDebug = function () {
-    var panel = document.getElementById('debugPanel');
-    var btn = document.getElementById('debugToggleBtn');
-    panel.classList.toggle('visible');
-    var on = panel.classList.contains('visible');
-    btn.textContent = on ? '\uD83D\uDD0D Hide Debug' : '\uD83D\uDD0D Debug';
+  window.toggleDebug=function(){
+    var p=document.getElementById('debugPanel'),btn=document.getElementById('debugToggleBtn');
+    p.classList.toggle('visible');
+    btn.textContent=p.classList.contains('visible')?'\uD83D\uDD0D Hide Debug':'\uD83D\uDD0D Debug';
   };
-
-  var L = window.voicegramLog;
+  var L=window.vgLog;
   L('Voicegram starting');
-  L('Address: ' + window.location.href);
-  L('Protocol: ' + window.location.protocol);
-  L('Secure context: ' + (window.isSecureContext ? 'YES' : 'NO'));
-  L('Inside iframe: ' + (window.self !== window.top ? 'YES - microphone may be blocked' : 'NO'));
-  L('MediaDevices API: ' + ((navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ? 'AVAILABLE' : 'MISSING'));
-
-  var secEl = document.getElementById('secureContext');
-  if (secEl) { secEl.textContent = window.isSecureContext ? '\u2713 Yes' : '\u2717 No'; }
-  var mdEl = document.getElementById('mediaDevices');
-  if (mdEl) { mdEl.textContent = (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) ? '\u2713 Yes' : '\u2717 No'; }
-
-  window.__voicegramReady = false;
-  setTimeout(function () {
-    if (!window.__voicegramReady) {
-      window.showError('App script did not load',
-        'The main script failed to start. Press F12 and check the Console for a red error, then send it to me.');
+  L('Address: '+location.href);
+  L('Protocol: '+location.protocol);
+  L('Secure context: '+(window.isSecureContext?'YES':'NO'));
+  L('Inside iframe: '+(window.self!==window.top?'YES - mic may be blocked':'NO'));
+  var hasMD=!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+  L('MediaDevices API: '+(hasMD?'AVAILABLE':'MISSING'));
+  document.getElementById('secureContext').textContent=window.isSecureContext?'Yes':'No';
+  document.getElementById('mediaDevices').textContent=hasMD?'Yes':'No';
+  window.__vgReady=false;
+  setTimeout(function(){
+    if(!window.__vgReady){
+      window.showError('App script did not load','Script 2 failed. Press F12, open Console, send me the red error.');
     }
-  }, 2000);
+  },2500);
 })();
 </script>
 
-<!-- ============ SCRIPT 2: the app ============ -->
 <script>
-(function () {
-  'use strict';
-  var L = window.voicegramLog;
+(function(){
+'use strict';
+var L=window.vgLog;
 
-  // ---------- Globals ----------
-  var audioContext = null;
-  var analyser = null;
-  var source = null;
-  var mediaStream = null;
-  var recorder = null;
-  var recordedChunks = [];
-  var audioBlob = null;
-  var animationId = null;
-  var frameCount = 0;
-  var lastFpsUpdate = 0;
-  var peakHold = null;
-  var timeDomainBuf = null;
-  var freqBytesBuf = null;
-  var targetFreq = 0;
-  var isRunning = false;
-  var spectrogramData = [];
-  var maxColumns = 300;
+var audioContext=null,analyser=null,source=null,mediaStream=null,recorder=null;
+var recordedChunks=[],audioBlob=null,animationId=null,frameCount=0,lastFps=0;
+var peakHold=null,timeBuf=null,freqBuf=null,targetFreq=0,isRunning=false;
+var specData=[],maxCols=300;
+var MIN_FREQ=20,MAX_FREQ=18000,A4=440,A4N=69;
+var NOTES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+var VR={
+  soprano:{min:261.63,max:1046.50,name:'Soprano',color:'#ff69b4'},
+  alto:{min:164.81,max:659.25,name:'Alto',color:'#9370db'},
+  tenor:{min:130.81,max:523.25,name:'Tenor',color:'#00ced1'},
+  baritone:{min:98.00,max:440.00,name:'Baritone',color:'#ffa500'},
+  bass:{min:55.00,max:330.00,name:'Bass',color:'#228b22'}
+};
+var harmOn=false,latestMag=null,smoothHarm=new Float32Array(16),harmFrame=0;
+var NH=16,FLOOR=-80,i;
+for(i=0;i<16;i++){smoothHarm[i]=-100;}
 
-  var MIN_FREQ = 20;
-  var MAX_FREQ = 18000;
-  var A4_FREQ = 440;
-  var A4_NOTE_NUMBER = 69;
-  var NOTES = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+var canvas=document.getElementById('spectrogram');
+var ctx=canvas.getContext('2d');
 
-  var VOICE_RANGES = {
-    soprano:  { min: 261.63, max: 1046.50, name: 'Soprano',  color: '#ff69b4' },
-    alto:     { min: 164.81, max: 659.25,  name: 'Alto',     color: '#9370db' },
-    tenor:    { min: 130.81, max: 523.25,  name: 'Tenor',    color: '#00ced1' },
-    baritone: { min: 98.00,  max: 440.00,  name: 'Baritone', color: '#ffa500' },
-    bass:     { min: 55.00,  max: 330.00,  name: 'Bass',     color: '#228b22' }
+function centsStr(c){return (c>=0?'+':'')+c;}
+function rgbStr(c){return 'rgb('+c.r+','+c.g+','+c.b+')';}
+function rgbaStr(c,a){return 'rgba('+c.r+','+c.g+','+c.b+','+a+')';}
+
+function ampToColor(a,m){
+  if(m<=0){m=1;}
+  var n=a/m;
+  if(n<0){n=0;} if(n>1){n=1;}
+  var r,g,b,t;
+  if(n<0.25){t=n/0.25;r=Math.floor(255*t);g=0;b=0;}
+  else if(n<0.5){t=(n-0.25)/0.25;r=255;g=Math.floor(255*t);b=0;}
+  else if(n<0.75){t=(n-0.5)/0.25;r=255;g=255;b=Math.floor(255*t);}
+  else{t=(n-0.75)/0.25;r=255;g=255;b=Math.floor(255*t);}
+  return {r:r,g:g,b:b};
+}
+function ampToDb(a){if(a<=0){return -Infinity;} return 20*Math.log10(a);}
+
+function autocorrelate(arr,sr){
+  var SIZE=arr.length,k,sumSq=0;
+  for(k=0;k<SIZE;k++){sumSq+=arr[k]*arr[k];}
+  if(Math.sqrt(sumSq/SIZE)<0.01){return -1;}
+  var half=Math.floor(SIZE/2),bestOff=-1,bestCorr=0,found=false;
+  var corrs=new Array(half),off,j,corr;
+  for(off=0;off<half;off++){
+    corr=0;
+    for(j=0;j<half;j++){corr+=Math.abs(arr[j]-arr[j+off]);}
+    corr=1-(corr/SIZE);
+    corrs[off]=corr;
+    if(corr>0.9&&corr>bestCorr){found=true;bestCorr=corr;bestOff=off;}
+    else if(found){
+      var sh=(corrs[bestOff+1]-corrs[bestOff-1])/(2*(corrs[bestOff]-corrs[bestOff+1]));
+      return sr/(bestOff+sh);
+    }
+  }
+  for(j=0;j<half;j++){
+    if(corrs[j]>bestCorr&&corrs[j]>0){bestCorr=corrs[j];bestOff=j;}
+  }
+  return bestOff>0?sr/bestOff:-1;
+}
+
+function freqToNote(f){
+  if(f<=0){return {note:'--',cents:0,full:'--'};}
+  var nn=Math.round(A4N+12*Math.log2(f/A4));
+  var nm=NOTES[((nn%12)+12)%12];
+  var oc=Math.floor(nn/12)-1;
+  var cf=A4*Math.pow(2,(nn-A4N)/12);
+  var ct=Math.round(1200*Math.log2(f/cf));
+  return {note:nm,cents:ct,full:nm+oc};
+}
+
+function resizeCanvas(){
+  var c=canvas.parentElement;
+  canvas.width=c.clientWidth;
+  canvas.height=c.clientHeight;
+  if(isRunning){drawSpec();}
+}
+function freqFromBin(b){return (MAX_FREQ/1024)*b;}
+function yFromFreq(f){
+  var b=Math.floor(f/(MAX_FREQ/1024));
+  return canvas.height-(b+1)*(canvas.height/128);
+}
+function addFrame(fd,mg){
+  specData.push({freq:fd,mag:mg});
+  if(specData.length>maxCols){specData.shift();}
+}
+
+function drawSpec(){
+  var w=canvas.width,h=canvas.height;
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,0,w,h);
+  if(specData.length===0){return;}
+  var colW=w/maxCols,barH=h/128;
+  var ci,bin,d,x,y,maxMag,col;
+  if(!peakHold){
+    peakHold=new Float32Array(128);
+    for(i=0;i<128;i++){peakHold[i]=0;}
+  }
+  for(ci=0;ci<specData.length;ci++){
+    d=specData[ci];
+    x=ci*colW;
+    maxMag=0;
+    for(bin=0;bin<d.mag.length;bin++){
+      if(d.mag[bin]>maxMag){maxMag=d.mag[bin];}
+      if(bin<128){
+        var pv=peakHold[bin];
+        var nv=d.mag[bin];
+        peakHold[bin]=(pv>nv?pv:nv)*0.995;
+      }
+    }
+    for(bin=0;bin<128;bin++){
+      y=h-(bin+1)*barH;
+      col=ampToColor(d.mag[bin],maxMag);
+      ctx.fillStyle=rgbStr(col);
+      ctx.fillRect(x,y,colW,barH+1);
+    }
+  }
+  var av=document.querySelector('.voice-range-btn.active');
+  if(av){
+    var rg=VR[av.getAttribute('data-voice')];
+    var y1=yFromFreq(rg.min),y2=yFromFreq(rg.max);
+    var top=Math.min(y1,y2),ht=Math.abs(y2-y1);
+    ctx.fillStyle=rg.color+'33';
+    ctx.fillRect(0,top,w,ht);
+    ctx.strokeStyle=rg.color;
+    ctx.lineWidth=2;
+    ctx.setLineDash([10,5]);
+    ctx.beginPath();ctx.moveTo(0,y1);ctx.lineTo(w,y1);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(0,y2);ctx.lineTo(w,y2);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=rg.color;
+    ctx.font='bold 14px Arial';
+    ctx.fillText(rg.name+' range: '+freqToNote(rg.min).full+' - '+freqToNote(rg.max).full,10,25);
+  }
+  if(targetFreq>0&&targetFreq<=MAX_FREQ){
+    var ty=yFromFreq(targetFreq);
+    ctx.strokeStyle='#00ff88';
+    ctx.lineWidth=3;
+    ctx.setLineDash([15,10]);
+    ctx.beginPath();ctx.moveTo(0,ty);ctx.lineTo(w,ty);ctx.stroke();
+    ctx.setLineDash([]);
+    var tn=freqToNote(targetFreq);
+    ctx.fillStyle='#00ff88';
+    ctx.font='bold 16px Arial';
+    ctx.fillText(tn.full+' ('+targetFreq.toFixed(0)+' Hz) target',w-220,ty-10);
+  }
+  for(bin=0;bin<128;bin++){
+    if(peakHold[bin]>0.1){
+      y=h-(bin+1)*barH;
+      col=ampToColor(peakHold[bin],1);
+      ctx.fillStyle=rgbaStr(col,0.3);
+      ctx.fillRect(w-10,y,5,barH+1);
+    }
+  }
+}
+
+function updateHarm(f0){
+  if(!latestMag||!audioContext){return;}
+  var bc=document.getElementById('harmonicBars');
+  var g=bc.getContext('2d');
+  bc.width=bc.clientWidth||400;
+  bc.height=180;
+  var w=bc.width,h=bc.height;
+  var binHz=audioContext.sampleRate/analyser.fftSize;
+  var n,freq,bin,raw,db;
+  for(n=1;n<=NH;n++){
+    freq=n*f0;
+    if(freq>=18000){smoothHarm[n-1]=FLOOR;continue;}
+    bin=Math.round(freq/binHz);
+    if(bin>latestMag.length-1){bin=latestMag.length-1;}
+    raw=20*Math.log10(latestMag[bin]+1e-9);
+    db=Math.max(FLOOR,Math.min(0,raw));
+    smoothHarm[n-1]=smoothHarm[n-1]*0.6+db*0.4;
+  }
+  var maxDb=-1000,dom=1;
+  for(n=1;n<=NH;n++){
+    if(smoothHarm[n-1]>maxDb){maxDb=smoothHarm[n-1];dom=n;}
+  }
+  g.fillStyle='#0e0e1a';
+  g.fillRect(0,0,w,h);
+  var slot=w/NH;
+  for(n=1;n<=NH;n++){
+    db=smoothHarm[n-1];
+    var norm=(db-FLOOR)/(-FLOOR);
+    if(norm<0){norm=0;}
+    var bh=norm*(h-45);
+    var bx=(n-1)*slot+6;
+    var by=h-22-bh;
+    g.fillStyle=(n===dom)?'#00ff88':'#6d4aff';
+    g.fillRect(bx,by,slot-12,bh);
+    g.fillStyle='#999';
+    g.font='11px Arial';
+    g.textAlign='center';
+    g.fillText('H'+n,(n-0.5)*slot,h-8);
+    if(db>FLOOR+2){
+      g.fillStyle='#ccc';
+      g.fillText(String(Math.round(db)),(n-0.5)*slot,by-4);
+    }
+  }
+  g.textAlign='left';
+  g.fillStyle='#aaa';
+  g.font='12px Arial';
+  g.fillText('f0 '+Math.round(f0)+' Hz ('+freqToNote(f0).full+') - strongest = H'+dom,10,16);
+  harmFrame++;
+  if(harmFrame%6===0){
+    var rows='';
+    for(n=1;n<=NH;n++){
+      db=smoothHarm[n-1];
+      if(db<=FLOOR+1){continue;}
+      freq=n*f0;
+      var hn=freqToNote(freq);
+      rows+='<tr'+(n===dom?' class="h-dominant"':'')+'><td>H'+n+'</td><td>'+Math.round(freq)+' Hz</td><td>'+hn.full+' '+centsStr(hn.cents)+'c</td><td>'+db.toFixed(1)+' dB</td></tr>';
+    }
+    document.getElementById('harmonicTable').innerHTML='<table class="harmonics-table"><tr><th>Harmonic</th><th>Freq</th><th>Note</th><th>Level</th></tr>'+rows+'</table>';
+  }
+}
+
+function processFrame(time){
+  if(!isRunning){return;}
+  if(!timeBuf){
+    timeBuf=new Uint8Array(analyser.fftSize);
+    freqBuf=new Uint8Array(analyser.frequencyBinCount);
+  }
+  analyser.getByteTimeDomainData(timeBuf);
+  analyser.getByteFrequencyData(freqBuf);
+  var tf=new Float32Array(analyser.fftSize);
+  for(i=0;i<analyser.fftSize;i++){tf[i]=(timeBuf[i]-128)/128;}
+  var fd=new Float32Array(analyser.frequencyBinCount);
+  var mg=new Float32Array(analyser.frequencyBinCount);
+  for(i=0;i<analyser.frequencyBinCount;i++){
+    var db=-100+(freqBuf[i]/255)*70;
+    fd[i]=freqBuf[i]/255;
+    mg[i]=Math.pow(10,db/20);
+  }
+  latestMag=mg;
+  var f=autocorrelate(tf,audioContext.sampleRate);
+  if(f>0){
+    var nt=freqToNote(f);
+    var fnEl=document.getElementById('fundamentalNote');
+    fnEl.textContent=nt.full;
+    var hit='';
+    if(targetFreq>0&&Math.abs(f-targetFreq)/targetFreq<0.03){
+      hit=' ON TARGET';
+      fnEl.style.color='#00ff88';
+    }else{
+      fnEl.style.color='#fff';
+    }
+    document.getElementById('fundamentalDetails').textContent=f.toFixed(1)+' Hz | '+centsStr(nt.cents)+'c off'+hit;
+    if(harmOn&&f>20&&f<4000){updateHarm(f);}
+  }else{
+    document.getElementById('fundamentalNote').textContent='--';
+    document.getElementById('fundamentalDetails').textContent='Silence detected';
+  }
+  addFrame(fd,mg);
+  drawSpec();
+  frameCount++;
+  if(time-lastFps>=1000){
+    document.getElementById('fpsCounter').textContent=frameCount;
+    frameCount=0;
+    lastFps=time;
+  }
+  animationId=requestAnimationFrame(processFrame);
+}
+
+function startApp(){
+  if(!window.isSecureContext){
+    window.showError('Not Secure','Microphone needs HTTPS. Current: '+location.href);
+    return;
+  }
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){
+    window.showError('API Unavailable','navigator.mediaDevices missing. Often caused by iframe embedding without allow="microphone".');
+    return;
+  }
+  L('Requesting microphone...');
+  audioContext=new (window.AudioContext||window.webkitAudioContext)();
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+    mediaStream=stream;
+    L('Microphone granted');
+    source=audioContext.createMediaStreamSource(stream);
+    analyser=audioContext.createAnalyser();
+    analyser.fftSize=2048;
+    analyser.smoothingTimeConstant=0.8;
+    source.connect(analyser);
+    resizeCanvas();
+    isRunning=true;
+    document.getElementById('startBtn').disabled=true;
+    document.getElementById('stopBtn').disabled=false;
+    document.getElementById('recordBtn').disabled=false;
+    document.getElementById('exportImageBtn').disabled=false;
+    document.getElementById('exportAudioBtn').disabled=false;
+    document.getElementById('sampleRate').textContent=audioContext.sampleRate;
+    L('Sample rate '+audioContext.sampleRate+' Hz - loop started');
+    processFrame(performance.now());
+  }).catch(function(err){
+    L('Mic failed: '+err.name+' - '+err.message);
+    if(err.name==='NotAllowedError'){
+      window.showError('Permission Denied','Allow microphone for this site in your browser settings, then reload.');
+    }else if(err.name==='NotFoundError'){
+      window.showError('No Microphone','No input device found.');
+    }else if(err.name==='NotReadableError'){
+      window.showError('Device Busy','Another app is using the microphone.');
+    }else{
+      window.showError('Microphone Error',err.name+': '+err.message);
+    }
+    if(audioContext){audioContext.close();audioContext=null;}
+  });
+}
+
+function stopApp(){
+  isRunning=false;
+  if(animationId){cancelAnimationFrame(animationId);}
+  if(mediaStream){mediaStream.getTracks().forEach(function(t){t.stop();});}
+  if(audioContext){audioContext.close();audioContext=null;}
+  L('Stopped');
+  document.getElementById('startBtn').disabled=false;
+  document.getElementById('stopBtn').disabled=true;
+  document.getElementById('recordBtn').disabled=true;
+  document.getElementById('exportImageBtn').disabled=true;
+  document.getElementById('exportAudioBtn').disabled=true;
+  document.getElementById('fundamentalNote').textContent='--';
+  document.getElementById('fundamentalDetails').textContent='Stopped';
+}
+
+function startRec(){
+  if(!mediaStream){window.showError('Not Running','Press Start first.');return;}
+  recorder=new MediaRecorder(mediaStream);
+  recordedChunks=[];
+  recorder.ondataavailable=function(e){if(e.data.size>0){recordedChunks.push(e.data);}};
+  recorder.onstop=function(){
+    audioBlob=new Blob(recordedChunks,{type:'audio/webm'});
+    addRecToList(URL.createObjectURL(audioBlob));
+    L('Recording saved');
   };
+  recorder.start();
+  L('Recording started');
+  document.getElementById('recordBtn').textContent='Stop Rec';
+}
+function stopRec(){
+  if(recorder&&recorder.state!=='inactive'){recorder.stop();}
+  document.getElementById('recordBtn').textContent='Record';
+}
+function addRecToList(url){
+  var list=document.getElementById('recordingList');
+  if(list.children.length===1&&list.firstChild.tagName==='P'){list.innerHTML='';}
+  var item=document.createElement('div');
+  item.className='recording-item';
+  var au=document.createElement('audio');
+  au.controls=true;
+  au.src=url;
+  var del=document.createElement('button');
+  del.className='delete-btn';
+  del.textContent='Delete';
+  del.onclick=function(){URL.revokeObjectURL(url);item.remove();};
+  item.appendChild(au);
+  item.appendChild(del);
+  list.insertBefore(item,list.firstChild);
+}
 
-  var harmonicsEnabled = false;
-  var latestMag = null;
-  var smoothHarm = new Float32Array(16);
-  var harmonicFrameCounter = 0;
-  var HARMONICS_TO_SHOW = 16;
-  var HARMONIC_FLOOR_DB = -80;
-  for (var i = 0; i < 16; i++) { smoothHarm[i] = -100; }
+function exportImage(){
+  if(!isRunning){window.showError('Cannot Export','Press Start first.');return;}
+  var a=document.createElement('a');
+  a.download='voicegram_'+Date.now()+'.png';
+  a.href=canvas.toDataURL('image/png');
+  a.click();
+  L('Image exported');
+}
+function exportAudio(){
+  if(!audioBlob){window.showError('No Recording','Use Record first.');return;}
+  var a=document.createElement('a');
+  a.download='voicegram_'+Date.now()+'.webm';
+  a.href=URL.createObjectURL(audioBlob);
+  a.click();
+  L('Audio downloaded');
+}
+function exportLog(){
+  var ts=new Date().toISOString().slice(0,19).replace(/:/g,'-');
+  var av=document.querySelector('.voice-range-btn.active');
+  var txt='VOICEGRAM SESSION LOG\n=====================\nTimestamp: '+ts+
+    '\nFundamental: '+document.getElementById('fundamentalNote').textContent+
+    '\nDetails: '+document.getElementById('fundamentalDetails').textContent+
+    '\nTarget: '+(targetFreq?targetFreq+' Hz':'None')+
+    '\nVoice range: '+(av?av.textContent:'None')+
+    '\nURL: '+location.href+'\n';
+  var blob=new Blob([txt],{type:'text/plain'});
+  var a=document.createElement('a');
+  a.download='voicegram_log_'+ts+'.txt';
+  a.href=URL.createObjectURL(blob);
+  a.click();
+  L('Session log exported');
+}
+function toggleFullscreen(){
+  if(!document.fullscreenElement){document.documentElement.requestFullscreen();}
+  else{document.exitFullscreen();}
+}
+function playTone(freq,dur){
+  dur=dur||2000;
+  if(!audioContext){window.showError('Not Ready','Press Start first.');return;}
+  var osc=audioContext.createOscillator();
+  var gain=audioContext.createGain();
+  osc.type='sine';
+  osc.frequency.setValueAtTime(freq,audioContext.currentTime);
+  gain.gain.setValueAtTime(0.3,audioContext.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001,audioContext.currentTime+dur/1000);
+  osc.connect(gain);
+  gain.connect(audioContext.destination);
+  osc.start();
+  osc.stop(audioContext.currentTime+dur/1000);
+  L('Tone '+Math.round(freq)+' Hz');
+}
 
-  var canvas = document.getElementById('spectrogram');
-  var ctx = canvas.getContext('2d');
-
-  // ---------- Helpers ----------
-  function centsLabel(c) {
-    return (c >= 0 ? '+' : '') + c;
+function pointerMove(clientX,clientY){
+  var rect=canvas.getBoundingClientRect();
+  var x=clientX-rect.left;
+  var y=clientY-rect.top;
+  document.getElementById('crosshair').innerHTML=
+    '<line x1="'+x+'" y1="0" x2="'+x+'" y2="'+canvas.height+'" stroke="#6d4aff" stroke-width="2"/>'+
+    '<line x1="0" y1="'+y+'" x2="'+canvas.width+'" y2="'+y+'" stroke="#6d4aff" stroke-width="2"/>';
+  if(specData.length===0){
+    document.getElementById('cursorFreq').textContent='-- Hz';
+    document.getElementById('cursorNote').textContent='--';
+    document.getElementById('cursorDb').textContent='-- dB';
+    document.getElementById('hoverStatus').textContent='Press Start first';
+    return;
   }
-
-  function rgbString(color) {
-    return 'rgb(' + color.r + ',' + color.g + ',' + color.b + ')';
+  var h=canvas.height;
+  var bin=Math.floor((h-y)/h*1024);
+  var cur=specData[specData.length-1];
+  if(bin<0||bin>=cur.freq.length){return;}
+  var f=freqFromBin(bin);
+  var nt=freqToNote(f);
+  var db=ampToDb(cur.mag[bin]);
+  document.getElementById('cursorFreq').textContent=Math.round(f)+' Hz';
+  document.getElementById('cursorNote').textContent=nt.full+' ('+centsStr(nt.cents)+'c)';
+  document.getElementById('cursorDb').textContent=(isFinite(db)?db.toFixed(1):'-inf')+' dB';
+  var av=document.querySelector('.voice-range-btn.active');
+  if(av){
+    var rg=VR[av.getAttribute('data-voice')];
+    var inside=(f>=rg.min&&f<=rg.max);
+    document.getElementById('hoverStatus').textContent=(inside?'Within ':'Outside ')+rg.name+' range - click to hear';
+  }else{
+    document.getElementById('hoverStatus').textContent='Click to hear tone';
   }
+}
 
-  function rgbaString(color, alpha) {
-    return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + alpha + ')';
+function pointerClick(clientX,clientY){
+  if(specData.length===0){return;}
+  var rect=canvas.getBoundingClientRect();
+  var x=clientX-rect.left;
+  var y=clientY-rect.top;
+  var h=canvas.height;
+  var bin=Math.floor((h-y)/h*1024);
+  var f=freqFromBin(bin);
+  if(f>MIN_FREQ&&f<=MAX_FREQ){playTone(f,2000);}
+}
+
+document.getElementById('startBtn').onclick=startApp;
+document.getElementById('stopBtn').onclick=stopApp;
+document.getElementById('recordBtn').onclick=function(){
+  if(document.getElementById('recordBtn').textContent.indexOf('Stop')>-1){stopRec();}
+  else{startRec();}
+};
+document.getElementById('clearBtn').onclick=function(){
+  specData=[];
+  ctx.fillStyle='#000';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+};
+document.getElementById('exportImageBtn').onclick=exportImage;
+document.getElementById('exportAudioBtn').onclick=exportAudio;
+document.getElementById('downloadTargetBtn').onclick=exportLog;
+document.getElementById('fullscreenBtn').onclick=toggleFullscreen;
+
+document.getElementById('harmonicsToggle').onclick=function(){
+  harmOn=!harmOn;
+  var btn=document.getElementById('harmonicsToggle');
+  var panel=document.getElementById('harmonicsPanel');
+  btn.textContent='Harmonics: '+(harmOn?'On':'Off');
+  btn.className=harmOn?'primary':'secondary';
+  panel.classList.toggle('visible',harmOn);
+  L('Harmonics '+(harmOn?'enabled':'disabled'));
+  if(!harmOn){
+    for(i=0;i<16;i++){smoothHarm[i]=-100;}
+    document.getElementById('harmonicTable').innerHTML='';
   }
+};
 
-  function amplitudeToColor(amplitude, maxAmplitude) {
-    if (maxAmplitude === 0) { return { r:0, g:0, b:0 }; }
-    var n = amplitude / maxAmplitude;
-    if (n < 0) { n = 0; }
-    var r, g, b, t;
-    if (n < 0.25) {
-      t = n / 0.25; r = Math.floor(255 * t); g = 0; b = 0;
-    } else if (n < 0.5) {
-      t = (n - 0.25) / 0.25; r = 255; g = Math.floor(255 * t); b = 0;
-    } else if (n < 0.75) {
-      t = (n - 0.5) / 0.25; r = 255; g = 255; b = Math.floor(255 * t);
-    } else {
-      t = (n - 0.75) / 0.25; if (t > 1) { t = 1; }
-      r = 255; g = 255; b = Math.floor(255 * t);
-    }
-    return { r:r, g:g, b:b };
+var vrBtns=document.querySelectorAll('.voice-range-btn');
+for(i=0;i<vrBtns.length;i++){
+  vrBtns[i].onclick=function(){
+    var all=document.querySelectorAll('.voice-range-btn');
+    for(var k=0;k<all.length;k++){all[k].classList.remove('active');}
+    this.classList.add('active');
+    if(isRunning){drawSpec();}
+  };
+}
+
+var sel=document.getElementById('targetNoteSelect');
+var cust=document.getElementById('customFreqInput');
+var tgl=document.getElementById('toggleTargetLine');
+var rem=document.getElementById('removeTargetLine');
+
+sel.onchange=function(){
+  var v=sel.value;
+  if(v==='custom'){
+    cust.style.display='inline-block';
+    cust.focus();
+    targetFreq=0;
+    tgl.disabled=true;
+    rem.disabled=true;
+  }else if(v){
+    cust.style.display='none';
+    targetFreq=parseFloat(v);
+    tgl.disabled=false;
+    rem.disabled=false;
+    tgl.textContent='Hide Line';
+    L('Target '+v+' Hz');
+  }else{
+    cust.style.display='none';
+    targetFreq=0;
+    tgl.disabled=true;
+    rem.disabled=true;
   }
-
-  function amplitudeToDb(amplitude) {
-    if (amplitude <= 0) { return -Infinity; }
-    return 20 * Math.log10(amplitude);
+  if(isRunning){drawSpec();}
+};
+cust.oninput=function(){
+  var f=parseFloat(cust.value);
+  if(f>20&&f<=18000){
+    targetFreq=f;
+    tgl.disabled=false;
+    rem.disabled=false;
   }
-
-  // ---------- Pitch detection ----------
-  function autocorrelate(arr, sampleRate) {
-    var SIZE = arr.length;
-    var sumSq = 0;
-    for (var k = 0; k < SIZE; k++) { sumSq += arr[k] * arr[k]; }
-    var rms = Math.sqrt(sumSq / SIZE);
-    if (rms < 0.01) { return -1; }
-
-    var halfSize = Math.floor(SIZE / 2);
-    var bestOffset = -1;
-    var bestCorrelation = 0;
-    var foundGood = false;
-    var correlations = new Array(halfSize);
-    var offset, i, correlation;
-
-    for (offset = 0; offset < halfSize; offset++) {
-      correlation = 0;
-      for (i = 0; i < halfSize; i++) {
-        correlation += Math.abs(arr[i] - arr[i + offset]);
-      }
-      correlation = 1 - (correlation / SIZE);
-      correlations[offset] = correlation;
-
-      if (correlation > 0.9 && correlation > bestCorrelation) {
-        foundGood = true;
-        bestCorrelation = correlation;
-        bestOffset = offset;
-      } else if (foundGood) {
-        var shift = (correlations[bestOffset + 1] - correlations[bestOffset - 1]) /
-                    (2 * (correlations[bestOffset] - correlations[bestOffset + 1]));
-        return sampleRate / (bestOffset + shift);
-      }
-    }
-
-    for (i = 0; i < halfSize; i++) {
-      if (correlations[i] > bestCorrelation && correlations[i] > 0) {
-        bestCorrelation = correlations[i];
-        bestOffset = i;
-      }
-    }
-    return bestOffset > 0 ? sampleRate / bestOffset : -1;
+  if(isRunning){drawSpec();}
+};
+tgl.onclick=function(){
+  if(targetFreq>0){targetFreq=0;tgl.textContent='Show Line';}
+  else{
+    var v=sel.value;
+    if(v&&v!=='custom'){targetFreq=parseFloat(v);}
+    tgl.textContent='Hide Line';
   }
+  if(isRunning){drawSpec();}
+};
+rem.onclick=function(){
+  targetFreq=0;
+  sel.value='';
+  tgl.disabled=true;
+  rem.disabled=true;
+  if(isRunning){drawSpec();}
+};
 
-  function freqToNote(frequency) {
-    if (frequency <= 0) { return { note:'--', octave:'', cents:0, full:'--' }; }
-    var noteNumber = Math.round(A4_NOTE_NUMBER + 12 * Math.log2(frequency / A4_FREQ));
-    var noteName = NOTES[((noteNumber % 12) + 12) % 12];
-    var octave = Math.floor(noteNumber / 12) - 1;
-    var calcFreq = A4_FREQ * Math.pow(2, (noteNumber - A4_NOTE_NUMBER) / 12);
-    var cents = Math.round(1200 * Math.log2(frequency / calcFreq));
-    return { note:noteName, octave:octave, cents:cents, full:noteName + octave };
-  }
+canvas.addEventListener('mousemove',function(e){pointerMove(e.clientX,e.clientY);});
+canvas.addEventListener('click',function(e){pointerClick(e.clientX,e.clientY);});
+canvas.addEventListener('touchmove',function(e){
+  e.preventDefault();
+  if(e.touches.length>0){pointerMove(e.touches[0].clientX,e.touches[0].clientY);}
+},{passive:false});
+canvas.addEventListener('touchend',function(e){
+  e.preventDefault();
+  if(e.changedTouches.length>0){pointerClick(e.changedTouches[0].clientX,e.changedTouches[0].clientY);}
+});
+window.addEventListener('resize',resizeCanvas);
 
-  // ---------- Canvas helpers ----------
-  function resizeCanvas() {
-    var container = canvas.parentElement;
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
-    if (isRunning) { drawSpectrogram(); }
-  }
-
-  function getFrequencyFromBin(binIndex) {
-    return (MAX_FREQ / 1024) * binIndex;
-  }
-
-  function getYFromFrequency(frequency) {
-    var binIndex = Math.floor(frequency / (MAX_FREQ / 1024));
-    return canvas.height - (binIndex + 1) * (canvas.height / 128);
-  }
-
-  function addFrameToSpectrogram(freqData, magnitudes) {
-    spectrogramData.push({ freq:freqData, magnitude:magnitudes });
-    if (spectrogramData.length > maxColumns) { spectrogramData.shift(); }
-  }
-
-  // ---------- Spectrogram drawing ----------
-  function drawSpectrogram() {
-    var width = canvas.width;
-    var height = canvas.height;
-
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, width, height);
-    if (spectrogramData.length === 0) { return; }
-
-    var colWidth = width / maxColumns;
-    var barHeight = height / 128;
-    var colIndex, bin, data, x, y, maxMag, color;
-
-    if (!peakHold) {
-      peakHold = new Float32Array(128);
-      for (var p = 0; p < 128; p++) { peakHold[p] = 0; }
-    }
-
-    for (colIndex = 0
+resizeCanvas();
+ctx.fillStyle='#000';
+ctx.fillRect(0,0,canvas.width,canvas.height);
+if('wakeLock' in navigator){
+  try{navigator.wakeLock.request('screen');}catch(e){}
+}
+L('App ready');
+window.__vgReady=true;
+})();
+</script>
+</body>
+</html>
